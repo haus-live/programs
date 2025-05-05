@@ -1,0 +1,23 @@
+[package]
+name = "haus"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "haus"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = []
+
+[dependencies]
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+mpl-core = { version = "0.9.1", features = ["anchor"] }
+session-keys = { version = "2.0.7", features = ["no-entrypoint"] }
+
