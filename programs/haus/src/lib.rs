@@ -7,7 +7,7 @@ use mpl_core::{
 };
 use mpl_core::instructions::{
     CreateV2CpiBuilder, 
-    // TransferV1CpiBuilder
+    TransferV1CpiBuilder
 };
 // use session_keys::{SessionError, SessionToken, session_auth_or, Session};
 
@@ -95,29 +95,31 @@ pub mod event_fund {
         Ok(())
     }
 
-    // /// Transfers the core asset to the leader if they meet the threshold, otherwise to the authority.
-    // pub fn transfer_asset(ctx: Context<TransferAsset>) -> Result<()> {
-    //     let event = &ctx.accounts.event;
-    //     let current_time = Clock::get().unwrap().unix_timestamp;
+    /// Transfers the core asset to the leader if they meet the threshold, otherwise to the authority.
+    pub fn transfer_asset(ctx: Context<TransferAsset>) -> Result<()> {
+        let event = &ctx.accounts.event;
+        let current_time = Clock::get().unwrap().unix_timestamp;
 
-    //     require!(current_time > event.end_timestamp, ErrorCode::EventNotEnded);
+        require!(current_time > event.end_timestamp, ErrorCode::EventNotEnded);
 
-    //     let recipient = if event.leader.is_some() && event.leader_total >= event.threshold {
-    //         event.leader.unwrap()
-    //     } else {
-    //         event.authority
-    //     };
+        let recipient = if event.leader.is_some() && event.leader_total >= event.threshold {
+            event.leader.unwrap()
+        } else {
+            event.authority
+        };
 
-    //     // Transfer the asset using Metaplex Core's transfer instruction
-    //     TransferV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
-    //         .asset(&ctx.accounts.asset.to_account_info())
-    //         .authority(&ctx.accounts.authority.to_account_info())
-    //         .new_owner(&recipient)
-    //         .invoke()?;
+        require!(recipient.key() == ctx.accounts.authority.key(), ErrorCode::SignerNoAuthority);
 
-    //     msg!("Asset {} transferred to: {}", event.asset, recipient);
-    //     Ok(())
-    // }
+        // Transfer the asset using Metaplex Core's transfer instruction
+        TransferV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
+            .asset(&ctx.accounts.asset.to_account_info())
+            .authority(Some(&ctx.accounts.authority.to_account_info()))
+            .new_owner(&ctx.accounts.authority.to_account_info())
+            .invoke()?;
+
+        msg!("Asset {} transferred to: {}", event.asset, recipient);
+        Ok(())
+    }
 
     // /// Withdraws funds from the event account to the authority after the event has ended.
     // pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
@@ -219,6 +221,7 @@ pub struct TransferAsset<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     /// CHECK: Metaplex Core program
+    #[account(address = MPL_CORE_ID)]
     pub mpl_core_program: UncheckedAccount<'info>,
 }
 
@@ -262,6 +265,8 @@ pub enum ErrorCode {
     EventEnded,
     #[msg("The event has not ended yet.")]
     EventNotEnded,
+    #[msg("The signer has no authority over asset.")]
+    SignerNoAuthority,
     // #[msg("Insufficient funds in the event account.")]
     // InsufficientFunds,
 }
