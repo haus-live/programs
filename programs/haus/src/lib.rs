@@ -1,189 +1,114 @@
 #![allow(unexpected_cfgs)]
+/**
+Create Event:
+- Create Core Asset Collection 
+- ticket price 
+- event type? 
+
+*/
 
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_instruction;
-use mpl_core::{
-    ID as MPL_CORE_ID,
-};
-use mpl_core::instructions::{
-    CreateV2CpiBuilder, 
-    TransferV1CpiBuilder
-};
-// use session_keys::{SessionError, SessionToken, session_auth_or, Session};
+use anchor_lang::prelude::Pubkey;
+use mpl_core::ID as MPL_CORE_ID;
+use std::mem;
+// use::mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
+// use::anchor_lang::solana_program::native_token;
+
+// use mpl_core::instructions::{
+//     CreateV2CpiBuilder, 
+//     TransferV1CpiBuilder,
+// };
+
+use anchor_spl::token::{Mint, TokenAccount};
+
+use mpl_token_metadata::accounts::{MasterEdition, Metadata as MetadataAccount};
+use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
+
+pub mod errors;
+
+pub use errors::ErrorCode as CErrorCode;
 
 declare_id!("EvNT111111111111111111111111111111111111111");
 
 #[program]
-pub mod event_fund {
+pub mod event_factory {
+    use anchor_lang::solana_program::system_instruction;
+
+    use crate::instruction::Tip;
+
     use super::*;
 
-    /// Initializes an event with begin and end timestamps and a payment threshold.
-    pub fn initialize_event(
-        ctx: Context<InitializeEvent>,
-        name: String,
-        uri: String,
-        begin_timestamp: i64,
-        end_timestamp: i64,
-        threshold: u64,
-    ) -> Result<()> {
-        require!(begin_timestamp < end_timestamp, ErrorCode::InvalidTimestamps);
+    // pub fn create_event(
+    //     ctx: Context<CreateEvent>,
+    //     args: CreateEventArgs,
+    // ) -> Result<()> {
+        
+    // }
 
-        let event = &mut ctx.accounts.event;
-        // event.authority = authority.key();  // todo: authority = payer?
-        event.authority = ctx.accounts.authority.key();
-        event.asset = ctx.accounts.asset.key();
-        event.begin_timestamp = begin_timestamp;
-        event.end_timestamp = end_timestamp;
-        event.leader = None;
-        event.leader_total = 0;
-        event.threshold = threshold;
-
-        // Create Metaplex Core asset (simplified for this example)
-        CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
-            .asset(&ctx.accounts.asset.to_account_info())
-            .authority(Some(ctx.accounts.authority.as_ref()))
-            .payer(ctx.accounts.payer.as_ref())
-            .name(name)
-            .uri(uri)
-            .invoke()?;
-
-        msg!("Event initialized with asset: {}, time range: {} to {}, and threshold: {}", event.asset, begin_timestamp, end_timestamp, threshold);
-        Ok(())
-    }
-
-    // /// Processes a payment using session keys for gasless transactions.
-    // #[session_auth_or(
-    //     ctx.accounts.payment_record.authority.key() == ctx.accounts.payer.key(),
-    //     SessionError::InvalidToken
-    // )]
-    pub fn make_payment(ctx: Context<MakePayment>, amount: u64) -> Result<()> {
+    pub fn tip(ctx: Context<TippingCtx>, args: TippingArgs) -> Result<()> {
         let current_time = Clock::get().unwrap().unix_timestamp;
         let event = &mut ctx.accounts.event;
 
-        require!(current_time >= event.begin_timestamp, ErrorCode::EventNotStarted);
-        require!(current_time <= event.end_timestamp, ErrorCode::EventEnded);
+        // Check timestamps of the event
+        require!(current_time >= event.begin_timestamp, CErrorCode::EventNotStarted);
+        require!(current_time <= event.end_timestamp, CErrorCode::EventEnded);
 
-        let payment = &mut ctx.accounts.payment;
-        payment.total += amount;
+        // TODO: Check token gated access to the event
+
+        // Update users tipping account and retrieve the total tipped amount
+        let tipping_calculator = &mut ctx.accounts.tipping_calculator;
+        let authority_total_tipped_amount = tipping_calculator.process_tip(&args.amount);
+
+        // Update the tipping leader pubkey and amount
+        if event.tipping_leader.is_none() || *authority_total_tipped_amount > event.tipping_leader_total {
+            event.tipping_leader = Some(ctx.accounts.authority.key());
+            event.tipping_leader_total = *authority_total_tipped_amount;
+        } else if event.tipping_leader == Some(ctx.accounts.authority.key()) {
+            event.tipping_leader_total = *authority_total_tipped_amount;
+        }
 
         let transfer_instruction = system_instruction::transfer(
-            &ctx.accounts.payer.key(),
+            &ctx.accounts.authority.key(),
             &event.key(),
-            amount,
+            args.amount,
         );
-
-        // Transfer SOL
         anchor_lang::solana_program::program::invoke(
             &transfer_instruction,
             &[
-                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.authority.to_account_info(),
                 event.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
             ],
         )?;
 
-        // Update leader if necessary
-        let user_total = payment.total;
-        if event.leader.is_none() || user_total > event.leader_total {
-            event.leader = Some(ctx.accounts.payer.key());
-            event.leader_total = user_total;
-        } else if event.leader == Some(ctx.accounts.payer.key()) {
-            event.leader_total = user_total;
+        msg!(
+            "Payment of {} lamports made by {} to event: {}, new total: {}", 
+            args.amount, 
+            ctx.accounts.payer.key(), 
+            ctx.accounts.event.key(), 
+            *authority_total_tipped_amount
+        );
+
+        Ok(())
+    }
+
+    pub fn test(ctx: Context<TestCtx>, expected_collection: Pubkey) -> Result<()> {
+        // ctx.accounts.mint.
+        let (metadata_account, _) = MetadataAccount::find_pda(&ctx.accounts.mint.key());
+        match metadata_account {
+            expected_collection => {
+                return Ok(());
+            },
+            _ => {
+                return Err(CErrorCode::NoTicket.into());
+            }
         }
-
-        msg!("Payment of {} lamports made by {} to event: {}, new total: {}", amount, ctx.accounts.payer.key(), ctx.accounts.event.key(), user_total);
-        Ok(())
+        // Ok(())
     }
-
-    /// Transfers the core asset to the leader if they meet the threshold, otherwise to the authority.
-    pub fn transfer_asset(ctx: Context<TransferAsset>) -> Result<()> {
-        let event = &ctx.accounts.event;
-        let current_time = Clock::get().unwrap().unix_timestamp;
-
-        require!(current_time > event.end_timestamp, ErrorCode::EventNotEnded);
-
-        let recipient = if event.leader.is_some() && event.leader_total >= event.threshold {
-            event.leader.unwrap()
-        } else {
-            event.authority
-        };
-
-        require!(recipient.key() == ctx.accounts.authority.key(), ErrorCode::SignerNoAuthority);
-
-        // Transfer the asset using Metaplex Core's transfer instruction
-        TransferV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
-            .asset(&ctx.accounts.asset.to_account_info())
-            .authority(Some(&ctx.accounts.authority.to_account_info()))
-            .new_owner(&ctx.accounts.authority.to_account_info())
-            .invoke()?;
-
-        msg!("Asset {} transferred to: {}", event.asset, recipient);
-        Ok(())
-    }
-
-    // /// Withdraws funds from the event account to the authority after the event has ended.
-    // pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
-    //     let event = &mut ctx.accounts.event;
-    //     let authority = &ctx.accounts.authority;
-    //     let current_time = Clock::get().unwrap().unix_timestamp;
-
-    //     require!(current_time > event.end_timestamp, ErrorCode::EventNotEnded);
-
-    //     let rent = Rent::get().unwrap();
-    //     let event_data_len = event.to_account_info().data_len();
-    //     let rent_exempt = rent.minimum_balance(event_data_len);
-
-    //     let event_lamports = event.to_account_info().lamports();
-    //     if event_lamports <= rent_exempt {
-    //         return Err(ErrorCode::InsufficientFunds.into());
-    //     }
-
-    //     let withdraw_amount = event_lamports - rent_exempt;
-
-    //     // Transfer SOL from event to authority
-    //     let seeds = &[&[b"event", authority.key().as_ref(), &[ctx.bumps.event]]];
-    //     let signer = &[&seeds[..]];
-
-    //     let cpi_accounts = anchor_lang::system_program::Transfer {
-    //         from: event.to_account_info(),
-    //         to: authority.to_account_info(),
-    //     };
-    //     let cpi_program = ctx.accounts.system_program.to_account_info();
-    //     anchor_lang::system_program::transfer(
-    //         CpiContext::new_with_signer(cpi_program, cpi_accounts, signer),
-    //         withdraw_amount,
-    //     )?;
-
-    //     msg!("Withdrew {} lamports from event to authority", withdraw_amount);
-    //     Ok(())
-    // }
 }
 
 #[derive(Accounts)]
-pub struct InitializeEvent<'info> {
-    /// CHECK: This is the Metaplex Core asset account (created by Metaplex)
-    #[account(mut)]
-    pub asset: Signer<'info>,
-    #[account(mut)]
-    pub authority: Signer<'info>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    #[account(
-        init,
-        payer = payer,
-        space = 8 + 32 + 32 + 8 + 8 + 1 + 32 + 8 + 8, // Discriminator + authority + asset + begin_timestamp + end_timestamp + leader (Option<Pubkey>) + leader_total + threshold
-        seeds = [b"event", authority.key().as_ref()],
-        bump
-    )]
-    pub event: Account<'info, Event>,
-    pub system_program: Program<'info, System>,
-    /// CHECK: Metaplex Core program
-    #[account(address = MPL_CORE_ID)]
-    pub mpl_core_program: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
-pub struct MakePayment<'info> {
+pub struct TippingCtx<'info> {
     #[account(
         mut,
         seeds = [b"event", authority.key().as_ref()],
@@ -193,85 +118,109 @@ pub struct MakePayment<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        space = 8 + 8, // Discriminator + total: u64
-        seeds = [b"payment", event.key().as_ref(), payer.key().as_ref()],
+        space = 8 + mem::size_of::<TippingCalculator>(),
+        seeds = [b"tipping_calculator", event.key().as_ref(), authority.key().as_ref()],
         bump
     )]
-    pub payment: Account<'info, Payment>,
+    pub tipping_calculator: Account<'info, TippingCalculator>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    /// CHECK: The authority of the event
     pub authority: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
-    // /// CHECK: Session key account for gasless transactions
-    // pub session_key: Account<'info, SessionKey>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct TippingArgs {
+    pub amount: u64,
 }
 
 #[derive(Accounts)]
-pub struct TransferAsset<'info> {
+pub struct TestCtx<'info> {
+    /// The mint account of the NFT
+    pub mint: Account<'info, Mint>,
     #[account(
-        mut,
+        seeds = [b"metadata", MPL_TOKEN_METADATA_ID.as_ref(), mint.key().as_ref()],
+        bump,
+        seeds::program = MPL_TOKEN_METADATA_ID
+    )]
+    pub metadata: AccountInfo<'info>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
+pub struct CreateEventArgs {
+    name: String,
+    uri: String,
+    begin_timestamp: u64,
+
+}
+
+#[derive(Accounts, Debug)]
+pub struct VerifyTicket<'info> {
+    #[account(signer)]
+    pub signer: Signer<'info>,
+
+}
+
+#[derive(Accounts)]
+pub struct CreateEvent<'info> {
+    #[account(mut)]
+    pub asset: Signer<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        init,
+        payer = payer,
+        space = 8 + mem::size_of::<Event>(),
         seeds = [b"event", authority.key().as_ref()],
         bump
     )]
     pub event: Account<'info, Event>,
-    /// CHECK: This is the Metaplex Core asset account
-    #[account(mut)]
-    pub asset: UncheckedAccount<'info>,
-    #[account(mut)]
-    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
     /// CHECK: Metaplex Core program
     #[account(address = MPL_CORE_ID)]
     pub mpl_core_program: UncheckedAccount<'info>,
 }
 
-#[derive(Accounts)]
-pub struct Withdraw<'info> {
-    #[account(
-        mut,
-        seeds = [b"event", authority.key().as_ref()],
-        bump,
-        has_one = authority,
-    )]
-    pub event: Account<'info, Event>,
-    #[account(mut)]
-    pub authority: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
 #[account]
 pub struct Event {
-    pub authority: Pubkey,      // The creator of the event
-    pub asset: Pubkey,         // The Metaplex Core asset representing the event
-    pub begin_timestamp: i64,  // Start time of the event
-    pub end_timestamp: i64,    // End time of the event
-    pub leader: Option<Pubkey>, // The user with the highest total payments
-    pub leader_total: u64,     // The highest total payment amount
-    pub threshold: u64,        // Minimum payment threshold for asset transfer
+    /// The creator of the event
+    pub authority: Pubkey,
+    /// The Real Time Asset (Metaplex Core) representing the event
+    pub realtime_asset: Pubkey,
+    /// Start time of the event
+    pub begin_timestamp: i64,
+    /// End time of the event
+    pub end_timestamp: i64,              
+    /// The user with the highest total tipped amount
+    pub tipping_leader: Option<Pubkey>,
+    /// The higher total tipped amount
+    pub tipping_leader_total: u128,       
+    /// Minimum total tipped amount needed to claim the assets' ownership 
+    pub reserve_price: u64,
+    /// Mint address of the ticket collection
+    pub mint_authority: Pubkey,
 }
 
 #[account]
-pub struct Payment {
-    pub total: u64,            // Total payments made by the user to the event
+pub struct TippingCalculator {
+    /// Total tips made by the user
+    pub total_tipped_amount: u128,
 }
 
-#[error_code]
-pub enum ErrorCode {
-    #[msg("The begin timestamp must be before the end timestamp.")]
-    InvalidTimestamps,
-    #[msg("The event has not started yet.")]
-    EventNotStarted,
-    #[msg("The event has already ended.")]
-    EventEnded,
-    #[msg("The event has not ended yet.")]
-    EventNotEnded,
-    #[msg("The signer has no authority over asset.")]
-    SignerNoAuthority,
-    // #[msg("Insufficient funds in the event account.")]
-    // InsufficientFunds,
+impl TippingCalculator {
+    /// Increments the total tipped by the given amount
+    pub fn process_tip(&mut self, amount: &u64) -> &u128 {
+        self.total_tipped_amount += *amount as u128;
+        &self.total_tipped_amount
+    }
 }
+
+// todo: check event timestamps 15m, 30m, 45m, 1h 
 
 pub fn bump(seeds: &[&[u8]], program_id: &Pubkey) -> u8 {
     let (_found_key, bump) = Pubkey::find_program_address(seeds, program_id);
     bump
 }
+
