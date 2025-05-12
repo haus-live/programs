@@ -23,7 +23,7 @@ use mpl_core::ID as MPL_CORE_ID;
 //     CreateV2CpiBuilder, 
 //     TransferV1CpiBuilder,
 // };
-use mpl_token_metadata::accounts::{MasterEdition, Metadata as MetadataAccount};
+use mpl_token_metadata::accounts::Metadata as MetadataAccount;
 use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
 
 pub mod errors;
@@ -35,7 +35,7 @@ pub use errors::{
     NftVerifierError
 };
 
-declare_id!("EvNT111111111111111111111111111111111111111");
+declare_id!("8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5");
 
 #[program]
 pub mod haus {
@@ -67,15 +67,7 @@ pub mod haus {
         require!(token_account.mint == mint.key(), NftVerifierError::InvalidMint);
         require!(token_account.amount == 1, NftVerifierError::InvalidAmount);
 
-        // Derive and verify metadata account PDA
-        let (metadata_pda, _bump) = Pubkey::find_program_address(
-            &[
-                b"metadata",
-                MPL_TOKEN_METADATA_ID.as_ref(),
-                mint.key().as_ref(),
-            ],
-            &MPL_TOKEN_METADATA_ID,
-        );
+        let (metadata_pda, _bump) = MetadataAccount::find_pda(&mint.key());
         require!(metadata_pda == metadata_account.key(), NftVerifierError::InvalidMetadataAccount);
 
         // Deserialize metadata
@@ -125,20 +117,6 @@ pub mod haus {
         );
 
         Ok(())
-    }
-
-    pub fn test(ctx: Context<TestCtx>, expected_collection: Pubkey) -> Result<()> {
-        // ctx.accounts.mint.
-        let (metadata_account, _) = MetadataAccount::find_pda(&ctx.accounts.mint.key());
-        match metadata_account {
-            expected_collection => {
-                return Ok(());
-            },
-            _ => {
-                return Err(CErrorCode::NoTicket.into());
-            }
-        }
-        // Ok(())
     }
 }
 
@@ -268,6 +246,4 @@ impl TippingCalculator {
 
 // TODO: check event timestamps 15m, 30m, 45m, 1h 
 // TODO: attributes (Art, etc)
-
-
 // TODO: fn tip, ctx<Tip>; fn create_event; EventAccount, ctx<CreateEvent>
