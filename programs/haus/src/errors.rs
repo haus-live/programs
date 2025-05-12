@@ -17,3 +17,21 @@ pub enum ErrorCode {
     #[msg("TGA (Ticket Gated Access)")]
     NoTicket,
 }
+
+#[error_code]
+pub enum NftVerifierError {
+    #[msg("Signer does not own the token account")]
+    InvalidOwner,
+    #[msg("Token account does not match mint")]
+    InvalidMint,
+    #[msg("Token account must hold exactly 1 token")]
+    InvalidAmount,
+    #[msg("Invalid metadata account")]
+    InvalidMetadataAccount,
+    #[msg("NFT collection is not verified")]
+    UnverifiedCollection,
+    #[msg("NFT does not belong to the expected collection")]
+    InvalidCollection,
+    #[msg("NFT has no collection data")]
+    NoCollectionData,
+}

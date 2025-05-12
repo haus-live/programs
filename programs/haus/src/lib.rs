@@ -7,10 +7,15 @@ Create Event:
 
 */
 
+use std::mem;
+
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::Pubkey;
+use anchor_lang::solana_program::system_instruction;
+
+use anchor_spl::token::{Mint, Token, TokenAccount};
+
 use mpl_core::ID as MPL_CORE_ID;
-use std::mem;
 // use::mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
 // use::anchor_lang::solana_program::native_token;
 
@@ -18,24 +23,22 @@ use std::mem;
 //     CreateV2CpiBuilder, 
 //     TransferV1CpiBuilder,
 // };
-
-use anchor_spl::token::{Mint, TokenAccount};
-
 use mpl_token_metadata::accounts::{MasterEdition, Metadata as MetadataAccount};
 use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
 
 pub mod errors;
+pub mod utils;
 
-pub use errors::ErrorCode as CErrorCode;
+pub use utils::bump as cbump;
+pub use errors::{
+    ErrorCode as CErrorCode,
+    NftVerifierError
+};
 
 declare_id!("EvNT111111111111111111111111111111111111111");
 
 #[program]
-pub mod event_factory {
-    use anchor_lang::solana_program::system_instruction;
-
-    use crate::instruction::Tip;
-
+pub mod haus {
     use super::*;
 
     // pub fn create_event(
@@ -45,6 +48,7 @@ pub mod event_factory {
         
     // }
 
+
     pub fn tip(ctx: Context<TippingCtx>, args: TippingArgs) -> Result<()> {
         let current_time = Clock::get().unwrap().unix_timestamp;
         let event = &mut ctx.accounts.event;
@@ -53,7 +57,38 @@ pub mod event_factory {
         require!(current_time >= event.begin_timestamp, CErrorCode::EventNotStarted);
         require!(current_time <= event.end_timestamp, CErrorCode::EventEnded);
 
-        // TODO: Check token gated access to the event
+        let token_account = &ctx.accounts.token_account;
+        let mint = &ctx.accounts.mint;
+        let metadata_account = &ctx.accounts.metadata_account;
+        let expected_collection_mint = &ctx.accounts.expected_collection_mint;
+
+        // Verify token account ownership and amount
+        require!(token_account.owner == ctx.accounts.authority.key(), NftVerifierError::InvalidOwner);
+        require!(token_account.mint == mint.key(), NftVerifierError::InvalidMint);
+        require!(token_account.amount == 1, NftVerifierError::InvalidAmount);
+
+        // Derive and verify metadata account PDA
+        let (metadata_pda, _bump) = Pubkey::find_program_address(
+            &[
+                b"metadata",
+                MPL_TOKEN_METADATA_ID.as_ref(),
+                mint.key().as_ref(),
+            ],
+            &MPL_TOKEN_METADATA_ID,
+        );
+        require!(metadata_pda == metadata_account.key(), NftVerifierError::InvalidMetadataAccount);
+
+        // Deserialize metadata
+        let metadata = MetadataAccount::try_from(metadata_account)?;
+        
+        // Verify collection
+        match metadata.collection {
+            Some(collection) => {
+                require!(collection.verified, NftVerifierError::UnverifiedCollection);
+                require!(collection.key == expected_collection_mint.key(), NftVerifierError::InvalidCollection);
+            },
+            None => return err!(NftVerifierError::NoCollectionData),
+        }
 
         // Update users tipping account and retrieve the total tipped amount
         let tipping_calculator = &mut ctx.accounts.tipping_calculator;
@@ -125,7 +160,21 @@ pub struct TippingCtx<'info> {
     pub tipping_calculator: Account<'info, TippingCalculator>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    #[account(mut)]
     pub authority: AccountInfo<'info>,
+    #[account(
+        constraint = token_account.owner == authority.key(),
+        constraint = token_account.mint == mint.key(),
+        constraint = token_account.amount == 1
+    )]
+    pub token_account: Account<'info, TokenAccount>,
+    pub mint: AccountInfo<'info>,
+    #[account(
+        owner = MPL_TOKEN_METADATA_ID
+    )]
+    pub metadata_account: AccountInfo<'info>,
+    pub expected_collection_mint: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
@@ -199,8 +248,8 @@ pub struct Event {
     pub tipping_leader_total: u128,       
     /// Minimum total tipped amount needed to claim the assets' ownership 
     pub reserve_price: u64,
-    /// Mint address of the ticket collection
-    pub mint_authority: Pubkey,
+    /// Ticket collection (Metaplex Token Metadata)
+    pub ticket_collection: Pubkey,
 }
 
 #[account]
@@ -217,10 +266,8 @@ impl TippingCalculator {
     }
 }
 
-// todo: check event timestamps 15m, 30m, 45m, 1h 
+// TODO: check event timestamps 15m, 30m, 45m, 1h 
+// TODO: attributes (Art, etc)
 
-pub fn bump(seeds: &[&[u8]], program_id: &Pubkey) -> u8 {
-    let (_found_key, bump) = Pubkey::find_program_address(seeds, program_id);
-    bump
-}
 
+// TODO: fn tip, ctx<Tip>; fn create_event; EventAccount, ctx<CreateEvent>
