@@ -51,7 +51,27 @@ pub mod haus {
     pub fn claim_realtime_asset(ctx: Context<ClaimRealtimeAsset>) -> Result<()> {
         instructions::claim_realtime_asset(ctx)
     }
+
+    pub fn withdraw_tips(ctx: Context<WithdrawTips>) -> Result<()> {
+        instructions::withdraw_tips(ctx)
+    }
 }
+
+// <withdraw_tips>
+#[derive(Accounts)]
+pub struct WithdrawTips<'info> {
+    #[account(
+        mut,
+        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
+        bump,
+        has_one = authority
+    )]
+    pub event: Account<'info, Event>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>
+}
+// </withdraw_tips>
 
 // <create_event>
 #[account]
@@ -194,7 +214,6 @@ impl TippingCalculator {
 }
 // </make_tip>
 
-// TODO: check event timestamps 15m, 30m, 45m, 1h 
-// TODO: maybe add core asset attributes (Art, etc)
 // TODO: naming conventions: fn tip, ctx<Tip>; fn create_event; EventAccount, ctx<CreateEvent>
 // TODO: codestyle: AAccount, TStruct, EEnum, EErrorCode, AEvent, TSomeStruct 
+// TODO: research composite accounts
