@@ -41,7 +41,6 @@ declare_id!("8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5");
 pub mod haus {
     use super::*;
 
-
     pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
         instructions::make_tip(ctx, args)
     }
