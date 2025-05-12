@@ -1,11 +1,5 @@
 #![allow(unexpected_cfgs)]
-/**
-Create Event:
-- Create Core Asset Collection 
-- ticket price 
-- event type? 
 
-*/
 use std::mem;
 
 use anchor_lang::prelude::*;
@@ -92,6 +86,8 @@ pub struct Event {
     pub reserve_price: u128,
     /// Ticket collection (Metaplex Token Metadata)
     pub ticket_collection: Pubkey,
+    /// Event type (category)
+    pub event_type: EventType,
 }
 
 #[derive(Accounts)]
@@ -114,7 +110,7 @@ pub struct CreateEvent<'info> {
     pub mpl_core_program: UncheckedAccount<'info>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub enum EventType {
     Art,
     Standup,

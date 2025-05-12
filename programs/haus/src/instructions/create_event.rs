@@ -26,6 +26,7 @@ pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<
     event.end_timestamp = args.end_timestamp;
     event.ticket_collection = args.ticket_collection;
     event.reserve_price = args.reserve_price;
+    event.event_type = args.event_type;
     // TODO: maybe use .. operator to shorten the code above
 
     CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
