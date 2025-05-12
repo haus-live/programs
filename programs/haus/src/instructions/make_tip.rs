@@ -8,6 +8,8 @@ use anchor_lang::solana_program::system_instruction;
 use mpl_token_metadata::accounts::Metadata as MetadataAccount;
 
 pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
+    msg!("making tip");
+
     let current_time = Clock::get().unwrap().unix_timestamp;
     let event = &mut ctx.accounts.event;
 
@@ -74,6 +76,8 @@ pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
         ctx.accounts.event.key(), 
         *authority_total_tipped_amount
     );
+
+    msg!("tip made");
 
     Ok(())
 }

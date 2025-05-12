@@ -1,12 +1,13 @@
 use crate::ClaimRealtimeAsset;
 use crate::CErrorCode;
-// use crate::Event;
 
 use anchor_lang::prelude::*;
 use mpl_core::instructions::TransferV1CpiBuilder;
 
 // Transfers the realtime asset to the leader if they meet the threshold, otherwise to the authority.
 pub fn claim_realtime_asset(ctx: Context<ClaimRealtimeAsset>) -> Result<()> {
+    msg!("claiming realtime asset");
+
     let event = &ctx.accounts.event;
     let current_time = Clock::get().unwrap().unix_timestamp;
 
@@ -28,5 +29,7 @@ pub fn claim_realtime_asset(ctx: Context<ClaimRealtimeAsset>) -> Result<()> {
         .invoke()?;
 
     msg!("Asset {} transferred to: {}", event.realtime_asset, recipient);
+    msg!("realtime asset claimed");
+
     Ok(())
 }

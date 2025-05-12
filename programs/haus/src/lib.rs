@@ -6,7 +6,6 @@ Create Event:
 - event type? 
 
 */
-
 use std::mem;
 
 use anchor_lang::prelude::*;
@@ -45,23 +44,81 @@ pub mod haus {
         instructions::make_tip(ctx, args)
     }
 
-    // pub fn create_event(
-    //     ctx: Context<CreateEvent>,
-    //     args: CreateEventArgs,
-    // ) -> Result<()> {
-        
-    // }
+    pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<()> {
+        instructions::create_event(ctx, args)
+    }
 
     pub fn claim_realtime_asset(ctx: Context<ClaimRealtimeAsset>) -> Result<()> {
         instructions::claim_realtime_asset(ctx)
     }
 }
 
+// <create_event>
+#[account]
+pub struct Event {
+    /// The creator of the event
+    pub authority: Pubkey,
+    /// The Real Time Asset (Metaplex Core) representing the event
+    pub realtime_asset: Pubkey,
+    /// Start time of the event
+    pub begin_timestamp: i64,
+    /// End time of the event
+    pub end_timestamp: i64,              
+    /// The user with the highest total tipped amount
+    pub tipping_leader: Option<Pubkey>,
+    /// The higher total tipped amount
+    pub tipping_leader_total: u128,       
+    /// Minimum total tipped amount needed to claim the assets' ownership 
+    pub reserve_price: u128,
+    /// Ticket collection (Metaplex Token Metadata)
+    pub ticket_collection: Pubkey,
+}
+
+#[derive(Accounts)]
+pub struct CreateEvent<'info> {
+    #[account(mut)]
+    pub realtime_asset: Signer<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + mem::size_of::<Event>(),
+        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
+        bump
+    )]
+    pub event: Account<'info, Event>,
+    pub system_program: Program<'info, System>,
+    /// CHECK: Metaplex Core program
+    #[account(address = MPL_CORE_ID)]
+    pub mpl_core_program: UncheckedAccount<'info>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub enum EventType {
+    Art,
+    Standup,
+    Lesson,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct CreateEventArgs {
+    name: String,
+    uri: String,
+    begin_timestamp: i64,
+    end_timestamp: i64,
+    reserve_price: u128,
+    ticket_collection: Pubkey,
+    event_type: EventType,
+}
+// </create_event>
+
+// <claim_realtime_asset>
 #[derive(Accounts)]
 pub struct ClaimRealtimeAsset<'info> {
     #[account(
         mut,
-        seeds = [b"event", authority.key().as_ref()],
+        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
         bump
     )]
     pub event: Account<'info, Event>,
@@ -74,12 +131,14 @@ pub struct ClaimRealtimeAsset<'info> {
     #[account(address = MPL_CORE_ID)]
     pub mpl_core_program: UncheckedAccount<'info>,
 }
+// </claim_realtime_asset>
 
+// <make_tip>
 #[derive(Accounts)]
 pub struct MakeTip<'info> {
     #[account(
         mut,
-        seeds = [b"event", authority.key().as_ref()],
+        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
         bump
     )]
     pub event: Account<'info, Event>,
@@ -120,65 +179,7 @@ pub struct MakeTipArgs {
     pub amount: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct CreateEventArgs {
-    name: String,
-    uri: String,
-    begin_timestamp: u64,
-
-}
-
-#[derive(Accounts)]
-pub struct VerifyTicket<'info> {
-    #[account(signer)]
-    pub signer: Signer<'info>,
-
-}
-
-#[derive(Accounts)]
-pub struct CreateEvent<'info> {
-    #[account(mut)]
-    pub asset: Signer<'info>,
-    #[account(mut)]
-    pub authority: Signer<'info>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    #[account(
-        init,
-        payer = payer,
-        space = 8 + mem::size_of::<Event>(),
-        seeds = [b"event", authority.key().as_ref()],
-        bump
-    )]
-    pub event: Account<'info, Event>,
-    pub system_program: Program<'info, System>,
-    /// CHECK: Metaplex Core program
-    #[account(address = MPL_CORE_ID)]
-    pub mpl_core_program: UncheckedAccount<'info>,
-}
-
 #[account]
-pub struct Event {
-    /// The creator of the event
-    pub authority: Pubkey,
-    /// The Real Time Asset (Metaplex Core) representing the event
-    pub realtime_asset: Pubkey,
-    /// Start time of the event
-    pub begin_timestamp: i64,
-    /// End time of the event
-    pub end_timestamp: i64,              
-    /// The user with the highest total tipped amount
-    pub tipping_leader: Option<Pubkey>,
-    /// The higher total tipped amount
-    pub tipping_leader_total: u128,       
-    /// Minimum total tipped amount needed to claim the assets' ownership 
-    pub reserve_price: u128,
-    /// Ticket collection (Metaplex Token Metadata)
-    pub ticket_collection: Pubkey,
-}
-
-#[account]
-#[derive(Debug)]
 pub struct TippingCalculator {
     /// Total tips made by the user
     pub total_tipped_amount: u128,
@@ -191,7 +192,9 @@ impl TippingCalculator {
         &self.total_tipped_amount
     }
 }
+// </make_tip>
 
 // TODO: check event timestamps 15m, 30m, 45m, 1h 
-// TODO: attributes (Art, etc)
-// TODO: fn tip, ctx<Tip>; fn create_event; EventAccount, ctx<CreateEvent>
+// TODO: maybe add core asset attributes (Art, etc)
+// TODO: naming conventions: fn tip, ctx<Tip>; fn create_event; EventAccount, ctx<CreateEvent>
+// TODO: codestyle: AAccount, TStruct, EEnum, EErrorCode, AEvent, TSomeStruct 
