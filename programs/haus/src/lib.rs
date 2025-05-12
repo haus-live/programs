@@ -137,7 +137,6 @@ pub struct CreateEventArgs {
 #[derive(Accounts)]
 pub struct ClaimRealtimeAsset<'info> {
     #[account(
-        mut,
         seeds = [constants::EVENT_SEED, authority.key().as_ref()],
         bump
     )]
