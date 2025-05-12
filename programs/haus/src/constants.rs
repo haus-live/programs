@@ -1,4 +1,1 @@
-pub const TICKET_URI: &str = "http://to.do";
-pub const TICKET_NAME: &str = "Haus Live Ticket Name";
-
-pub const METADATA_SEED: &bytes = b"metadata";
+pub const TIPPING_CALCULATOR_SEED: &[u8] = b"tipping_calculator";

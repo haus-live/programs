@@ -2,6 +2,8 @@ use anchor_lang::error_code;
 
 #[error_code]
 pub enum ErrorCode {
+    #[msg("Signer has no authority over the event")]
+    InvalidOwner,
     #[msg("Invalid event category.")]
     InvalidEventCategory,
     #[msg("The event has not started yet.")]
