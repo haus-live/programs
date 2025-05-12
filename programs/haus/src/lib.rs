@@ -8,13 +8,6 @@ use anchor_lang::prelude::Pubkey;
 use anchor_spl::token::{Token, TokenAccount};
 
 use mpl_core::ID as MPL_CORE_ID;
-// use::mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
-// use::anchor_lang::solana_program::native_token;
-
-// use mpl_core::instructions::{
-//     CreateV2CpiBuilder, 
-//     TransferV1CpiBuilder,
-// };
 use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
 
 pub mod errors;
@@ -22,7 +15,6 @@ pub mod utils;
 pub mod constants;
 pub mod instructions;
 
-pub use utils::bump as cbump;
 pub use errors::{
     ErrorCode as CErrorCode,
     NftVerifierError
