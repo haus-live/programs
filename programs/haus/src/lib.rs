@@ -79,7 +79,7 @@ pub struct Event {
     /// Ticket collection (Metaplex Token Metadata)
     pub ticket_collection: Pubkey,
     /// Event type (category)
-    pub event_type: EventType,
+    pub art_category: ArtCategory,
 }
 
 #[derive(Accounts)]
@@ -103,10 +103,13 @@ pub struct CreateEvent<'info> {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub enum EventType {
-    Art,
-    Standup,
-    Lesson,
+pub enum ArtCategory {
+    StandupComedy,
+    PerformanceArt,
+    PoetrySlam,
+    OpenMicImprov,
+    LivePainting,
+    CreatingWorkshop,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -117,7 +120,7 @@ pub struct CreateEventArgs {
     end_timestamp: i64,
     reserve_price: u128,
     ticket_collection: Pubkey,
-    event_type: EventType,
+    art_category: ArtCategory,
 }
 // </create_event>
 

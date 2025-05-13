@@ -26,15 +26,15 @@ pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<
     event.end_timestamp = args.end_timestamp;
     event.ticket_collection = args.ticket_collection;
     event.reserve_price = args.reserve_price;
-    event.event_type = args.event_type;
+    event.art_category = args.art_category;
     // TODO: maybe use .. operator to shorten the code above
 
     CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
         .asset(&ctx.accounts.realtime_asset.to_account_info())
-        .collection(None.as_ref())
-        .authority(Some(ctx.accounts.event.to_account_info().as_ref()))
-        .payer(ctx.accounts.authority.as_ref())
-        .owner(Some(&ctx.accounts.authority.as_ref())) 
+        .collection(None.as_ref())  // No collection here
+        .authority(Some(ctx.accounts.event.to_account_info().as_ref())) // Even is the authority 
+        .payer(ctx.accounts.authority.as_ref()) // Authority (signer) is the payer
+        .owner(Some(&ctx.accounts.authority.as_ref())) // Authority (signer) is the owner
         .system_program(&ctx.accounts.system_program.to_account_info())
         .name(args.name)
         .uri(args.uri)
