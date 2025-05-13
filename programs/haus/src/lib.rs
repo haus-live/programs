@@ -53,6 +53,7 @@ pub struct WithdrawTips<'info> {
         has_one = authority
     )]
     pub event: Account<'info, Event>,
+    /// CHECK: authority
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>
@@ -62,7 +63,7 @@ pub struct WithdrawTips<'info> {
 // <create_event>
 #[account]
 pub struct Event {
-    /// The creator of the event
+    /// CHECK: event authority
     pub authority: Pubkey,
     /// The Real Time Asset (Metaplex Core) representing the event
     pub realtime_asset: Pubkey,
@@ -86,6 +87,7 @@ pub struct Event {
 pub struct CreateEvent<'info> {
     #[account(mut)]
     pub realtime_asset: Signer<'info>,
+    /// CHECK: authority
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
@@ -166,6 +168,7 @@ pub struct MakeTip<'info> {
     pub tipping_calculator: Account<'info, TippingCalculator>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    /// CHECK: authority
     #[account(mut)]
     pub authority: AccountInfo<'info>,
     #[account(
@@ -174,11 +177,14 @@ pub struct MakeTip<'info> {
         constraint = token_account.amount == 1
     )]
     pub token_account: Account<'info, TokenAccount>,
+    /// CHECK: mint account
     pub mint: AccountInfo<'info>,
     #[account(
         owner = MPL_TOKEN_METADATA_ID
     )]
+    /// CHECK: metadata account
     pub metadata_account: AccountInfo<'info>,
+    /// CHECK: expected collection mint
     pub expected_collection_mint: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
