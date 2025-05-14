@@ -7,8 +7,8 @@ use anchor_lang::prelude::Pubkey;
 
 use anchor_spl::token::{Token, TokenAccount};
 
-use mpl_core::ID as MPL_CORE_ID;
 use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
+use mpl_core::ID as MPL_CORE_ID;
 
 pub mod errors;
 pub mod utils;
@@ -114,7 +114,7 @@ pub enum ArtCategory {
     CreatingWorkshop,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct CreateEventArgs {
     name: String,
     uri: String,
@@ -210,6 +210,4 @@ impl TippingCalculator {
 }
 // </make_tip>
 
-// TODO: naming conventions: fn tip, ctx<Tip>; fn create_event; EventAccount, ctx<CreateEvent>
-// TODO: codestyle: AAccount, TStruct, EEnum, EErrorCode, AEvent, TSomeStruct 
 // TODO: research composite accounts

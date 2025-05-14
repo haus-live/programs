@@ -4,7 +4,7 @@ use crate::CErrorCode;
 use crate::constants;
 
 use anchor_lang::prelude::*;
-use mpl_core::instructions::CreateV2CpiBuilder;
+use mpl_core::instructions::CreateV1CpiBuilder;
 
 pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<()> {
     msg!("creating event");
@@ -19,7 +19,6 @@ pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<
     );
 
     let event = &mut ctx.accounts.event;
-
     event.authority = ctx.accounts.authority.key();
     event.realtime_asset = ctx.accounts.realtime_asset.key();
     event.begin_timestamp = args.begin_timestamp;
@@ -29,16 +28,20 @@ pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<
     event.art_category = args.art_category;
     // TODO: maybe use .. operator to shorten the code above
 
-    CreateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
-        .asset(&ctx.accounts.realtime_asset.to_account_info())
-        .collection(None.as_ref())  // No collection here
+    CreateV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
+        .asset(&&ctx.accounts.realtime_asset.to_account_info())
+        // .collection(None.as_ref())  // No collection here
         .authority(Some(ctx.accounts.event.to_account_info().as_ref())) // Even is the authority 
         .payer(ctx.accounts.authority.as_ref()) // Authority (signer) is the payer
-        .owner(Some(&ctx.accounts.authority.as_ref())) // Authority (signer) is the owner
+        // .owner(Some(&ctx.accounts.event.as_ref())) // Authority (signer) is the owner
         .system_program(&ctx.accounts.system_program.to_account_info())
         .name(args.name)
         .uri(args.uri)
-        .invoke()?;
+        .invoke_signed(&[&[
+            constants::EVENT_SEED, 
+            ctx.accounts.authority.key().as_ref(), 
+            &[ctx.bumps.event]]]
+        )?;
 
     msg!("event created");
 
