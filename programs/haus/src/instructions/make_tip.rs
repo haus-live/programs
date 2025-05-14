@@ -1,11 +1,11 @@
 use crate::MakeTip;
 use crate::MakeTipArgs;
 use crate::CErrorCode;
-use crate::NftVerifierError;
+// use crate::NftVerifierError;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
-use mpl_token_metadata::accounts::Metadata as MetadataAccount;
+// use mpl_token_metadata::accounts::Metadata as MetadataAccount;
 
 pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
     msg!("making tip");
@@ -17,30 +17,30 @@ pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
     require!(current_time >= event.begin_timestamp, CErrorCode::EventNotStarted);
     require!(current_time <= event.end_timestamp, CErrorCode::EventEnded);
 
-    let token_account = &ctx.accounts.token_account;
-    let mint = &ctx.accounts.mint;
-    let metadata_account = &ctx.accounts.metadata_account;
-    let expected_collection_mint = &ctx.accounts.expected_collection_mint;
+    // let token_account = &ctx.accounts.token_account;
+    // let mint = &ctx.accounts.mint;
+    // let metadata_account = &ctx.accounts.metadata_account;
+    // let expected_collection_mint = &ctx.accounts.expected_collection_mint;
 
-    // Verify token account ownership and amount
-    require!(token_account.owner == ctx.accounts.authority.key(), NftVerifierError::InvalidOwner);
-    require!(token_account.mint == mint.key(), NftVerifierError::InvalidMint);
-    require!(token_account.amount == 1, NftVerifierError::InvalidAmount);
+    // // Verify token account ownership and amount
+    // require!(token_account.owner == ctx.accounts.authority.key(), NftVerifierError::InvalidOwner);
+    // require!(token_account.mint == mint.key(), NftVerifierError::InvalidMint);
+    // require!(token_account.amount == 1, NftVerifierError::InvalidAmount);
 
-    let (metadata_pda, _bump) = MetadataAccount::find_pda(&mint.key());
-    require!(metadata_pda == metadata_account.key(), NftVerifierError::InvalidMetadataAccount);
+    // let (metadata_pda, _bump) = MetadataAccount::find_pda(&mint.key());
+    // require!(metadata_pda == metadata_account.key(), NftVerifierError::InvalidMetadataAccount);
 
-    // Deserialize metadata
-    let metadata = MetadataAccount::try_from(metadata_account)?;
+    // // Deserialize metadata
+    // let metadata = MetadataAccount::try_from(metadata_account)?;
     
-    // Verify collection
-    match metadata.collection {
-        Some(collection) => {
-            require!(collection.verified, NftVerifierError::UnverifiedCollection);
-            require!(collection.key == expected_collection_mint.key(), NftVerifierError::InvalidCollection);
-        },
-        None => return Err(NftVerifierError::NoCollectionData.into()),
-    }
+    // // Verify collection
+    // match metadata.collection {
+    //     Some(collection) => {
+    //         require!(collection.verified, NftVerifierError::UnverifiedCollection);
+    //         require!(collection.key == expected_collection_mint.key(), NftVerifierError::InvalidCollection);
+    //     },
+    //     None => return Err(NftVerifierError::NoCollectionData.into()),
+    // }
 
     // Update users tipping account and retrieve the total tipped amount
     let tipping_calculator = &mut ctx.accounts.tipping_calculator;

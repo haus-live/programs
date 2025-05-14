@@ -91,7 +91,7 @@ pub struct CreateEvent<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
-        init,
+        init_if_needed,
         payer = authority,
         space = 8 + mem::size_of::<Event>(),
         seeds = [constants::EVENT_SEED, authority.key().as_ref()],
@@ -171,22 +171,22 @@ pub struct MakeTip<'info> {
     /// CHECK: authority
     #[account(mut)]
     pub authority: AccountInfo<'info>,
-    #[account(
-        constraint = token_account.owner == authority.key(),
-        constraint = token_account.mint == mint.key(),
-        constraint = token_account.amount == 1
-    )]
-    pub token_account: Account<'info, TokenAccount>,
-    /// CHECK: mint account
-    pub mint: AccountInfo<'info>,
-    #[account(
-        owner = MPL_TOKEN_METADATA_ID
-    )]
-    /// CHECK: metadata account
-    pub metadata_account: AccountInfo<'info>,
-    /// CHECK: expected collection mint
-    pub expected_collection_mint: AccountInfo<'info>,
-    pub token_program: Program<'info, Token>,
+    // #[account(
+    //     constraint = token_account.owner == authority.key(),
+    //     constraint = token_account.mint == mint.key(),
+    //     constraint = token_account.amount == 1
+    // )]
+    // pub token_account: Account<'info, TokenAccount>,
+    // /// CHECK: mint account
+    // pub mint: AccountInfo<'info>,
+    // #[account(
+    //     owner = MPL_TOKEN_METADATA_ID
+    // )]
+    // /// CHECK: metadata account
+    // pub metadata_account: AccountInfo<'info>,
+    // /// CHECK: expected collection mint
+    // pub expected_collection_mint: AccountInfo<'info>,
+    // pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
