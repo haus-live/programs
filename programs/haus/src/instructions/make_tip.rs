@@ -44,11 +44,12 @@ pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
 
     // Update users tipping account and retrieve the total tipped amount
     let tipping_calculator = &mut ctx.accounts.tipping_calculator;
+    let tipping_authority = tipping_calculator.authority;
     let authority_total_tipped_amount = tipping_calculator.process_tip(&args.amount);
 
     // Update the tipping leader pubkey and amount
     if event.tipping_leader.is_none() || *authority_total_tipped_amount > event.tipping_leader_total {
-        event.tipping_leader = Some(ctx.accounts.signer.key());
+        event.tipping_leader = Some(tipping_authority);
         event.tipping_leader_total = *authority_total_tipped_amount;
     } else if event.tipping_leader == Some(ctx.accounts.signer.key()) {
         event.tipping_leader_total = *authority_total_tipped_amount;

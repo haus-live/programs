@@ -14,8 +14,15 @@ const standupComedy_artCategory = {
   standupComedy: {},
 };
 
-describe("haus", () => {
+describe("haus", async () => {
   // Configure the client to use the local cluster.
+  // const context = await startAnchor('', [
+  //   { name: 'session_keys', programId: 'KeyspM2ssCJbqUhQ4k7sveSiY4WjnYsrXkC8oDbwde5' },
+  //   { name: 'core_asset', programId: 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d' },
+  //   { name: 'token_metadata', programId: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'}
+  // ], []);
+  // const provider = new BankrunProvider(context);
+  
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
@@ -27,7 +34,7 @@ describe("haus", () => {
 
   console.log("current ts!" + current_timestamp.toString());
 
-  it("creates event & makes tip & claims realtime asset", async () => {
+  it("creates event & makes tip & session keys & rta claim", async () => {
     const currentSlot = await program.provider.connection.getSlot();
     const currentBlocktime = await program.provider.connection.getBlockTime(
       currentSlot
@@ -41,7 +48,7 @@ describe("haus", () => {
       name: "name",
       uri: "http://u.ri",
       beginTimestamp: new BN(current_timestamp),
-      endTimestamp: new BN(current_timestamp + 900),
+      endTimestamp: new BN(current_timestamp + 10),
       reservePrice: new BN(1),
       ticketCollection: payer.publicKey,
       artCategory: standupComedy_artCategory,
@@ -157,5 +164,27 @@ describe("haus", () => {
     }
     const acc = await program.account.event.fetch(event_pubkey);
     console.log("total: " + acc.tippingLeaderTotal.toString());
+  
+    await delay(10_000);
+    /// ::claim_realtime_asset
+    try {
+      const tx = await program.methods
+        .claimRealtimeAsset()
+        .accountsPartial({
+          event: event_pubkey,
+          realtimeAsset: realtime_asset.publicKey,
+          authority: payer.payer.publicKey,
+        })
+        .signers([payer.payer])
+        .rpc()
+      console.log(tx);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+
+    console.log("rta claimed");
   });
+
+
 });

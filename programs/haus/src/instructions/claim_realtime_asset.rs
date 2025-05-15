@@ -1,3 +1,4 @@
+use crate::constants;
 use crate::ClaimRealtimeAsset;
 use crate::CErrorCode;
 
@@ -27,9 +28,14 @@ pub fn claim_realtime_asset(ctx: Context<ClaimRealtimeAsset>) -> Result<()> {
     // Transfer the asset using Metaplex Core's transfer instruction
     TransferV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
         .asset(&ctx.accounts.realtime_asset.to_account_info())
-        .authority(Some(&ctx.accounts.authority.to_account_info()))
+        .authority(Some(&ctx.accounts.event.to_account_info()))
         .new_owner(&ctx.accounts.authority.to_account_info())
-        .invoke()?;
+        .payer(&ctx.accounts.authority.to_account_info())
+        .invoke_signed(&[&[
+            constants::EVENT_SEED,
+            ctx.accounts.realtime_asset.key().as_ref(),
+            &[ctx.bumps.event]
+        ]])?;
 
     msg!("Asset {} transferred to: {}", event.realtime_asset, recipient);
     msg!("realtime asset claimed");

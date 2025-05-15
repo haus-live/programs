@@ -14,7 +14,7 @@ pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<
     require!(
         event_duration > 0 && 
         event_duration % constants::FIFTEEN_MINUTES_IN_SECONDS == 0 &&
-        event_duration < constants::MAX_EVENT_DURATION_IN_SECONDS, 
+        event_duration <= constants::MAX_EVENT_DURATION_IN_SECONDS, 
         CErrorCode::EventDurationInvalid
     );
 
@@ -29,11 +29,10 @@ pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<
     // TODO: maybe use .. operator to shorten the code above
 
     CreateV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
-        .asset(&&ctx.accounts.realtime_asset.to_account_info())
-        // .collection(None.as_ref())  // No collection here
+        .asset(&ctx.accounts.realtime_asset.to_account_info())
         .authority(Some(ctx.accounts.event.to_account_info().as_ref())) // Even is the authority 
+        .owner(Some(ctx.accounts.event.to_account_info().as_ref()))
         .payer(ctx.accounts.authority.as_ref()) // Authority (signer) is the payer
-        // .owner(Some(&ctx.accounts.event.as_ref())) // Authority (signer) is the owner
         .system_program(&ctx.accounts.system_program.to_account_info())
         .name(args.name)
         .uri(args.uri)

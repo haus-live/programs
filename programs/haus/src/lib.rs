@@ -9,6 +9,7 @@ use anchor_lang::prelude::Pubkey;
 
 // use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
 use mpl_core::ID as MPL_CORE_ID;
+use mpl_core::accounts::BaseAssetV1;
 
 use session_keys::{SessionError, SessionToken, session_auth_or, Session};
 
@@ -140,12 +141,14 @@ pub struct CreateEventArgs {
 #[derive(Accounts)]
 pub struct ClaimRealtimeAsset<'info> {
     #[account(
+        mut,
         seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
         bump
     )]
     pub event: Account<'info, Event>,
     /// CHECK: This is the Metaplex Core asset account
-    pub realtime_asset: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub realtime_asset: Account<'info, BaseAssetV1>,
     #[account(mut)]
     pub authority: Signer<'info>,
     /// CHECK: Metaplex Core program
