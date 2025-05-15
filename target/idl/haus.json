@@ -325,6 +325,10 @@
       ],
       "accounts": [
         {
+          "name": "realtime_asset",
+          "writable": true
+        },
+        {
           "name": "event",
           "writable": true,
           "pda": {
@@ -341,7 +345,7 @@
               },
               {
                 "kind": "account",
-                "path": "authority"
+                "path": "realtime_asset"
               }
             ]
           }
@@ -349,10 +353,7 @@
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "event"
-          ]
+          "signer": true
         },
         {
           "name": "system_program",

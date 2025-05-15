@@ -331,6 +331,10 @@ export type Haus = {
       ],
       "accounts": [
         {
+          "name": "realtimeAsset",
+          "writable": true
+        },
+        {
           "name": "event",
           "writable": true,
           "pda": {
@@ -347,7 +351,7 @@ export type Haus = {
               },
               {
                 "kind": "account",
-                "path": "authority"
+                "path": "realtimeAsset"
               }
             ]
           }
@@ -355,10 +359,7 @@ export type Haus = {
         {
           "name": "authority",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "event"
-          ]
+          "signer": true
         },
         {
           "name": "systemProgram",

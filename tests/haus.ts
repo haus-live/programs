@@ -184,6 +184,25 @@ describe("haus", async () => {
     }
 
     console.log("rta claimed");
+
+    /// ::withdraw_tips
+    try {
+      const tx = await program.methods
+        .withdrawTips()
+        .accountsPartial({
+          event: event_pubkey,
+          realtimeAsset: realtime_asset.publicKey,
+          authority: payer.payer.publicKey,
+        })
+        .signers([payer.payer])
+        .rpc();
+      console.log(tx);
+
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+
   });
 
 

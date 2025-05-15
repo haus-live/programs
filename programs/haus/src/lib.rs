@@ -57,11 +57,12 @@ pub mod haus {
 // <withdraw_tips>
 #[derive(Accounts)]
 pub struct WithdrawTips<'info> {
+    #[account(mut)]
+    pub realtime_asset: Account<'info, BaseAssetV1>,
     #[account(
         mut,
-        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
+        seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
         bump,
-        has_one = authority
     )]
     pub event: Account<'info, Event>,
     /// CHECK: authority
