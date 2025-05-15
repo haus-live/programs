@@ -10,6 +10,8 @@ use anchor_lang::prelude::Pubkey;
 // use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
 use mpl_core::ID as MPL_CORE_ID;
 
+use session_keys::{SessionError, SessionToken, session_auth_or, Session};
+
 pub mod errors;
 pub mod utils;
 pub mod constants;
@@ -26,6 +28,14 @@ declare_id!("8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5");
 pub mod haus {
     use super::*;
 
+    pub fn init_tipping_calculator(ctx: Context<InitTippingCalculator>) -> Result<()> {
+        instructions::init_tipping_calculator(ctx)
+    }
+
+    #[session_auth_or(
+        ctx.accounts.tipping_calculator.authority.key() == ctx.accounts.signer.key(),
+        SessionError::InvalidToken
+    )]
     pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
         instructions::make_tip(ctx, args)
     }
@@ -144,8 +154,36 @@ pub struct ClaimRealtimeAsset<'info> {
 }
 // </claim_realtime_asset>
 
-// <make_tip>
+// <init_tipping_calculator> 
 #[derive(Accounts)]
+pub struct InitTippingCalculator<'info> {
+    /// CHECK: realtime asset
+    pub realtime_asset: UncheckedAccount<'info>,
+    #[account(
+        seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
+        bump
+    )]
+    pub event: Account<'info, Event>,
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + mem::size_of::<TippingCalculator>(),
+        seeds = [
+            constants::TIPPING_CALCULATOR_SEED,
+            realtime_asset.key().as_ref(),
+            signer.key().as_ref()
+        ],
+        bump
+    )]
+    pub tipping_calculator: Account<'info, TippingCalculator>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+// </init_tipping_calculator>
+
+// <make_tip>
+#[derive(Accounts, Session)]
 #[instruction(ix: MakeTipArgs)]
 pub struct MakeTip<'info> {
     // TODO: maybe pass realtime_asset_key via UncheckedAccount
@@ -156,22 +194,28 @@ pub struct MakeTip<'info> {
     )]
     pub event: Account<'info, Event>,
     #[account(
-        init_if_needed,
-        payer = payer,
-        space = 8 + mem::size_of::<TippingCalculator>(),
+        mut,
         seeds = [
             constants::TIPPING_CALCULATOR_SEED, 
-            event.key().as_ref(), 
-            authority.key().as_ref()
+            ix.realtime_asset_key.as_ref(), 
+            tipping_calculator.authority.key().as_ref()
         ],
         bump
     )]
     pub tipping_calculator: Account<'info, TippingCalculator>,
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    #[session(
+        signer = signer,
+        authority = tipping_calculator.authority.key() 
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
+}
+
     /// CHECK: authority
-    #[account(mut)]
-    pub authority: AccountInfo<'info>,
+    // #[account(mut)]
+    // pub authority: AccountInfo<'info>,
     // #[account(
     //     constraint = token_account.owner == authority.key(),
     //     constraint = token_account.mint == mint.key(),
@@ -188,8 +232,6 @@ pub struct MakeTip<'info> {
     // /// CHECK: expected collection mint
     // pub expected_collection_mint: AccountInfo<'info>,
     // pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-}
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct MakeTipArgs {
@@ -201,6 +243,8 @@ pub struct MakeTipArgs {
 pub struct TippingCalculator {
     /// Total tips made by the user
     pub total_tipped_amount: u128,
+    /// Authority
+    pub authority: Pubkey,
 }
 
 impl TippingCalculator {

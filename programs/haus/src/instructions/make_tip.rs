@@ -48,22 +48,22 @@ pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
 
     // Update the tipping leader pubkey and amount
     if event.tipping_leader.is_none() || *authority_total_tipped_amount > event.tipping_leader_total {
-        event.tipping_leader = Some(ctx.accounts.authority.key());
+        event.tipping_leader = Some(ctx.accounts.signer.key());
         event.tipping_leader_total = *authority_total_tipped_amount;
-    } else if event.tipping_leader == Some(ctx.accounts.authority.key()) {
+    } else if event.tipping_leader == Some(ctx.accounts.signer.key()) {
         event.tipping_leader_total = *authority_total_tipped_amount;
     }
 
     // Transfer SOL to the event account
     let transfer_instruction = system_instruction::transfer(
-        &ctx.accounts.authority.key(),
+        &ctx.accounts.signer.key(),
         &event.key(),
         args.amount,
     );
     anchor_lang::solana_program::program::invoke(
         &transfer_instruction,
         &[
-            ctx.accounts.authority.to_account_info(),
+            ctx.accounts.signer.to_account_info(),
             event.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         ],
@@ -72,7 +72,7 @@ pub fn make_tip(ctx: Context<MakeTip>, args: MakeTipArgs) -> Result<()> {
     msg!(
         "Payment of {} lamports made by {} to event: {}, new total: {}", 
         args.amount, 
-        ctx.accounts.payer.key(), 
+        ctx.accounts.signer.key(), 
         ctx.accounts.event.key(), 
         *authority_total_tipped_amount
     );

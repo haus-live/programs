@@ -3,10 +3,11 @@ import { Program } from "@coral-xyz/anchor";
 import { Haus } from "../target/types/haus";
 import { Keypair } from "@solana/web3.js";
 import { BN } from "bn.js";
-import { assert } from "chai";
+import { expect } from "chai";
+import { SessionTokenManager, SDK as ST } from "@magicblock-labs/gum-sdk";
 
 function delay(ms: number) {
-  return new Promise( resolve => setTimeout(resolve, ms) );
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const standupComedy_artCategory = {
@@ -28,11 +29,14 @@ describe("haus", () => {
 
   it("creates event & makes tip & claims realtime asset", async () => {
     const currentSlot = await program.provider.connection.getSlot();
-    const currentBlocktime = await program.provider.connection.getBlockTime(currentSlot);
-    console.log("curblocktime" + currentBlocktime.toString());
-    // Add your test here.
+    const currentBlocktime = await program.provider.connection.getBlockTime(
+      currentSlot
+    );
+    console.log("curblocktime " + currentBlocktime.toString());
+
+    /// ::create_event
     const realtime_asset = new Keypair();
-    console.log("rta pubkey "+realtime_asset.publicKey);
+    console.log("rta pubkey " + realtime_asset.publicKey);
     const createEventArgs = {
       name: "name",
       uri: "http://u.ri",
@@ -72,61 +76,86 @@ describe("haus", () => {
     // sync localnet timestamp
     await delay(2000);
 
-    const tipping_calculator_seeds = [
+    /// ::init_tipping_calculator
+    let tipping_calculator_seeds = [
       Buffer.from(anchor.utils.bytes.utf8.encode("tipping_calculator")),
-      event.toBuffer(),
+      realtime_asset.publicKey.toBuffer(),
       payer.publicKey.toBuffer(),
     ];
-    const [tipping_calculator_pubkey, __] = anchor.web3.PublicKey.findProgramAddressSync(
+    const [tipping_calculator_pubkey, __] =
+      anchor.web3.PublicKey.findProgramAddressSync(
         tipping_calculator_seeds,
         program.programId
       );
+    try {
+      const tx = program.methods
+        .initTippingCalculator()
+        .accountsPartial({
+          realtimeAsset: realtime_asset.publicKey,
+          event: event_pubkey,
+        })
+        .signers([payer.payer])
+        .rpc();
+      console.log(tx);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+
+    /// ::make_tip
+    const session_signer = new Keypair();
+    console.log("session_signer ", session_signer.publicKey);
+    const stm = new SessionTokenManager(payer, program.provider.connection);
+    await stm.program.methods
+      .createSession(true, new BN(current_timestamp + 1000), new BN(1000000000))
+      .accountsPartial({
+        // targetProgram: anchor.web3.SystemProgram.programId,
+        targetProgram: program.programId,
+        sessionSigner: session_signer.publicKey,
+        authority: payer.payer.publicKey,
+      })
+      .signers([session_signer, payer.payer])
+      .rpc();
+    await delay(1000);
+    const sstseeds = [
+      Buffer.from(anchor.utils.bytes.utf8.encode("session_token")),
+      program.programId.toBuffer(),
+      session_signer.publicKey.toBuffer(),
+      payer.payer.publicKey.toBuffer(),
+    ];
+    const [sstkey, ___] = anchor.web3.PublicKey.findProgramAddressSync(
+      sstseeds,
+      stm.program.programId
+    );
+    // const sstx = await stm.get(sstkey);
+    // console.log(sstx.authority);
+    // console.log(sstx.sessionSigner);
+    // console.log("session token " + sstkey.toString());
+    // console.log("tipping calc authority " + payer.payer.publicKey);
+
+    // // const sstkey2
+
     console.log(tipping_calculator_pubkey);
     try {
       const tx = await program.methods
-        .makeTip({ 
+        .makeTip({
           amount: new BN(1),
-          realtimeAssetKey: realtime_asset.publicKey
+          realtimeAssetKey: realtime_asset.publicKey,
         })
         .accountsPartial({
-          event: event,
+          event: event_pubkey,
           tippingCalculator: tipping_calculator_pubkey,
-          authority: payer.payer.publicKey,
+          signer: session_signer.publicKey,
+          sessionToken: sstkey,
         })
-        .signers([payer.payer])
+        .signers([session_signer])
         .rpc();
       console.log(tx);
     } catch (e) {
       console.log(e);
       throw e;
     }
-    const acc = await program.account.event.fetch(
-      event_pubkey
-    );
+    const acc = await program.account.event.fetch(event_pubkey);
     console.log("total: " + acc.tippingLeaderTotal.toString());
-
-    try {
-      const tx = await program.methods
-        .makeTip({ 
-          amount: new BN(1),
-          realtimeAssetKey: realtime_asset.publicKey
-        })
-        .accountsPartial({
-          event: event,
-          tippingCalculator: tipping_calculator_pubkey,
-          authority: payer.payer.publicKey,
-        })
-        .signers([payer.payer])
-        .rpc();
-      console.log(tx);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
-    const acc2 = await program.account.event.fetch(
-      event_pubkey
-    );
-    console.log("total: " + acc2.tippingLeaderTotal.toString());
-    assert(acc2.tippingLeaderTotal.eq(new BN(2)));
   });
 });

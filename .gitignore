@@ -8,3 +8,4 @@ test-ledger
 draft_src
 tests/metaplex_core_asset_program.so 
 tests/metaplex_token_metadata_program.so
+!yarn-error.log
