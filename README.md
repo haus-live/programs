@@ -34,3 +34,11 @@ RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor localnet
 ```bash
 RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor run test
 ```
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+
+TODO:
+- update metadata from update_authority (which is system accountn) 

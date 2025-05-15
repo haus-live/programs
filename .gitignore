@@ -11,3 +11,4 @@ tests/metaplex_token_metadata_program.so
 !yarn-error.log
 !target/idl/haus.json
 !target/types/haus.ts
+app/chunk_uploader/venv

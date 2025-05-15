@@ -1065,6 +1065,7 @@ dependencies = [
  "mpl-token-metadata",
  "proc-macro2",
  "session-keys",
+ "solana-security-txt",
 ]
 
 [[package]]
