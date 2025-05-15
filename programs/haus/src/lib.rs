@@ -5,9 +5,9 @@ use std::mem;
 use anchor_lang::prelude::*;
 use anchor_lang::prelude::Pubkey;
 
-use anchor_spl::token::{Token, TokenAccount};
+// use anchor_spl::token::{Token, TokenAccount};
 
-use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
+// use mpl_token_metadata::ID as MPL_TOKEN_METADATA_ID;
 use mpl_core::ID as MPL_CORE_ID;
 
 pub mod errors;
@@ -91,10 +91,10 @@ pub struct CreateEvent<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(
-        init_if_needed,
+        init,
         payer = authority,
         space = 8 + mem::size_of::<Event>(),
-        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
+        seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
         bump
     )]
     pub event: Account<'info, Event>,
@@ -130,13 +130,12 @@ pub struct CreateEventArgs {
 #[derive(Accounts)]
 pub struct ClaimRealtimeAsset<'info> {
     #[account(
-        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
+        seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
         bump
     )]
     pub event: Account<'info, Event>,
     /// CHECK: This is the Metaplex Core asset account
-    #[account(mut)]
-    pub asset: UncheckedAccount<'info>,
+    pub realtime_asset: UncheckedAccount<'info>,
     #[account(mut)]
     pub authority: Signer<'info>,
     /// CHECK: Metaplex Core program
@@ -147,10 +146,12 @@ pub struct ClaimRealtimeAsset<'info> {
 
 // <make_tip>
 #[derive(Accounts)]
+#[instruction(ix: MakeTipArgs)]
 pub struct MakeTip<'info> {
+    // TODO: maybe pass realtime_asset_key via UncheckedAccount
     #[account(
         mut,
-        seeds = [constants::EVENT_SEED, authority.key().as_ref()],
+        seeds = [constants::EVENT_SEED, ix.realtime_asset_key.as_ref()],
         bump
     )]
     pub event: Account<'info, Event>,
@@ -193,6 +194,7 @@ pub struct MakeTip<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct MakeTipArgs {
     pub amount: u64,
+    pub realtime_asset_key: Pubkey,
 }
 
 #[account]

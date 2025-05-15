@@ -26,7 +26,7 @@ pub fn claim_realtime_asset(ctx: Context<ClaimRealtimeAsset>) -> Result<()> {
 
     // Transfer the asset using Metaplex Core's transfer instruction
     TransferV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
-        .asset(&ctx.accounts.asset.to_account_info())
+        .asset(&ctx.accounts.realtime_asset.to_account_info())
         .authority(Some(&ctx.accounts.authority.to_account_info()))
         .new_owner(&ctx.accounts.authority.to_account_info())
         .invoke()?;

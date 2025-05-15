@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Haus } from "../target/types/haus";
 import { Keypair } from "@solana/web3.js";
 import { BN } from "bn.js";
+import { assert } from "chai";
 
 function delay(ms: number) {
   return new Promise( resolve => setTimeout(resolve, ms) );
@@ -25,12 +26,13 @@ describe("haus", () => {
 
   console.log("current ts!" + current_timestamp.toString());
 
-  it("creates event", async () => {
+  it("creates event & makes tip & claims realtime asset", async () => {
     const currentSlot = await program.provider.connection.getSlot();
     const currentBlocktime = await program.provider.connection.getBlockTime(currentSlot);
     console.log("curblocktime" + currentBlocktime.toString());
     // Add your test here.
     const realtime_asset = new Keypair();
+    console.log("rta pubkey "+realtime_asset.publicKey);
     const createEventArgs = {
       name: "name",
       uri: "http://u.ri",
@@ -42,7 +44,7 @@ describe("haus", () => {
     };
     let event_seeds = [
       Buffer.from(anchor.utils.bytes.utf8.encode("event")),
-      payer.publicKey.toBuffer(),
+      realtime_asset.publicKey.toBuffer(),
     ];
     const [event_pubkey, _] = anchor.web3.PublicKey.findProgramAddressSync(
       event_seeds,
@@ -82,7 +84,10 @@ describe("haus", () => {
     console.log(tipping_calculator_pubkey);
     try {
       const tx = await program.methods
-        .makeTip({ amount: new BN(1) })
+        .makeTip({ 
+          amount: new BN(1),
+          realtimeAssetKey: realtime_asset.publicKey
+        })
         .accountsPartial({
           event: event,
           tippingCalculator: tipping_calculator_pubkey,
@@ -92,11 +97,36 @@ describe("haus", () => {
         .rpc();
       console.log(tx);
     } catch (e) {
+      console.log(e);
       throw e;
     }
     const acc = await program.account.event.fetch(
       event_pubkey
     );
     console.log("total: " + acc.tippingLeaderTotal.toString());
+
+    try {
+      const tx = await program.methods
+        .makeTip({ 
+          amount: new BN(1),
+          realtimeAssetKey: realtime_asset.publicKey
+        })
+        .accountsPartial({
+          event: event,
+          tippingCalculator: tipping_calculator_pubkey,
+          authority: payer.payer.publicKey,
+        })
+        .signers([payer.payer])
+        .rpc();
+      console.log(tx);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+    const acc2 = await program.account.event.fetch(
+      event_pubkey
+    );
+    console.log("total: " + acc2.tippingLeaderTotal.toString());
+    assert(acc2.tippingLeaderTotal.eq(new BN(2)));
   });
 });

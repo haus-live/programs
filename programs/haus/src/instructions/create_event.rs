@@ -38,8 +38,8 @@ pub fn create_event(ctx: Context<CreateEvent>, args: CreateEventArgs) -> Result<
         .name(args.name)
         .uri(args.uri)
         .invoke_signed(&[&[
-            constants::EVENT_SEED, 
-            ctx.accounts.authority.key().as_ref(), 
+            constants::EVENT_SEED,
+            ctx.accounts.realtime_asset.key().as_ref(),
             &[ctx.bumps.event]]]
         )?;
 
