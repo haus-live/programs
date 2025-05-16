@@ -11,12 +11,12 @@ haus = "8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5"
 [programs.devnet]
 haus = "8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5"
 
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
 [registry]
 url = "https://api.apr.dev"
-
-[provider]
-cluster = "devnet"
-wallet = "~/.config/solana/id.json"
 
 [test]
 startup_wait = 5000

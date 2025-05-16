@@ -42,3 +42,7 @@ wallet = "~/.config/solana/id.json"
 
 TODO:
 - update metadata from update_authority (which is system accountn) 
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"

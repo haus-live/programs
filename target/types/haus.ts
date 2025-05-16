@@ -427,37 +427,37 @@ export type Haus = {
     {
       "code": 6000,
       "name": "invalidOwner",
-      "msg": "Signer has no authority over the event"
+      "msg": "Signer does not own the token account"
     },
     {
       "code": 6001,
-      "name": "invalidEventCategory",
-      "msg": "Invalid event category."
+      "name": "invalidMint",
+      "msg": "Token account does not match mint"
     },
     {
       "code": 6002,
-      "name": "eventNotStarted",
-      "msg": "The event has not started yet."
+      "name": "invalidAmount",
+      "msg": "Token account must hold exactly 1 token"
     },
     {
       "code": 6003,
-      "name": "eventEnded",
-      "msg": "The event has already ended."
+      "name": "invalidMetadataAccount",
+      "msg": "Invalid metadata account"
     },
     {
       "code": 6004,
-      "name": "eventNotEnded",
-      "msg": "The event has not ended yet."
+      "name": "unverifiedCollection",
+      "msg": "NFT collection is not verified"
     },
     {
       "code": 6005,
-      "name": "eventDurationInvalid",
-      "msg": "Invalid event duration. Should be either 15m, 30m or 45m"
+      "name": "invalidCollection",
+      "msg": "NFT does not belong to the expected collection"
     },
     {
       "code": 6006,
-      "name": "noTicket",
-      "msg": "TGA (Ticket Gated Access)"
+      "name": "noCollectionData",
+      "msg": "NFT has no collection data"
     }
   ],
   "types": [
