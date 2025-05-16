@@ -1,3 +1,5 @@
+import logging
+
 from solana.rpc.api import Client
 from solders.pubkey import Pubkey
 from solders.keypair import Keypair
@@ -27,6 +29,7 @@ class Solana:
     def __init__(self, config: AppConfig):
         self._config = config
         self._solana = Client(endpoint=self._config.SOLANA_RPC_URL)
+        self._logger = logging.getLogger('app.Solana')
     
     def read_uri_from_asset_account(self, asset_pubkey: str):
         pubkey = Pubkey.from_string(asset_pubkey)

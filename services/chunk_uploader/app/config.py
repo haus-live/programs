@@ -1,10 +1,16 @@
 from typing import Optional
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class AppConfig(BaseSettings):
+    class Config:
+        env_file = '.env'
+
+    LOG_LEVEL: str = 'INFO'
+
     PINATA_JWT: str
-    PINATA_BASE_URL: str = "https://uploads.pinata.cloud/v3"
+    PINATA_UPLOAD_BASE_URL: str = "https://uploads.pinata.cloud/v3"
+    PINATA_API_BASE_URL: str = "https://api.pinata.cloud/v3"
     PINATA_DOMAIN: Optional[str]
     PINATA_API_KEY: Optional[str]
     PINATA_API_SECRET: Optional[str]
@@ -16,7 +22,8 @@ class AppConfig(BaseSettings):
     CHUNK_UPDATER_SECRET_KEY: list[int]
 
     RESTREAMER_HLS_BASE_URI: str
-    CHUNK_DURATION: int = 60
+    # CHUNK_DURATION: int = 60
+    CHUNK_DURATION: int = 10
 
     SCHEDULER_MAX_INSTANCES: int = 100
 

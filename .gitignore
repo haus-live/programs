@@ -12,3 +12,5 @@ tests/metaplex_token_metadata_program.so
 !target/idl/haus.json
 !target/types/haus.ts
 app/chunk_uploader/venv
+services/chunk_uploader/.env
+.venv

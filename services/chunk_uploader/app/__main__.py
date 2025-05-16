@@ -1,20 +1,25 @@
 from flask import request, jsonify
 from json import JSONDecodeError
 
-from . import task, app, config
+from . import task, app, config, scheduler
 
 
-@app.route('/', methods=['POST'])
+# no auth (for the hackathon)
+@app.route('/stream', methods=['POST'])
 def app_route():
     try:
-        request_json = request.json()
-        task.process_stream(**request_json)
+        task.process_stream(**request.json)
         return jsonify(message='success'), 200
     except (KeyError, JSONDecodeError) as e:
         return jsonify(message=repr(e)), 400
     except BaseException as e:
-        return jsonify(message='unknown error'), 500
+        return jsonify(message=f'unknown error {repr(e)}'), 500
+
+
+def start_app():
+    scheduler.start()
+    app.run(host='0.0.0.0', port=config.APP_PORT)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=config.APP_PORT)
+    start_app()
