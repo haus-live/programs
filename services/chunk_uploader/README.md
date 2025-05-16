@@ -1,4 +1,27 @@
-# Token Metadata
+## Prerequisites
+
+Create virtual environment
+
+```bash
+python3 -m virtualenv venv
+source venv/bin/activate
+```
+
+Install requirements 
+
+```bash
+pip install -r requirements.txt
+```
+
+## Run
+
+It runs app on the host network on port `8888`
+
+```bash
+python -m app
+```
+
+### Token Metadata structure
 
 https://developers.metaplex.com/token-metadata/token-standard
 
