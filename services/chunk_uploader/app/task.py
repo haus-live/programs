@@ -46,12 +46,19 @@ class Task:
             self._patch_asset_content(content=asset_content, chunk=chunk_uri, chunk_id=chunk_id)
             new_asset_uri = self._pinata.write_json(asset_content)
             self._solana.update_core_asset_account_uri(new_asset_uri)
+    
+    def _process_chunk_noexcept(self, *, chunk_id, stream_id, asset_pubkey):
+        try:
+            self._process_chunk(chunk_id=chunk_id, stream_id=stream_id, asset_pubkey=asset_pubkey)
+        except BaseException:
+            # fail silently
+            ...
 
     def process_stream(self, *, stream_id, asset_pubkey, event_begin_timestamp, event_end_timestamp):
         map(
             lambda chunk_id, job_timestamp: (
                 self._scheduler.add_job(
-                    func=self._process_chunk,
+                    func=self._process_chunk_noexcept,
                     kwargs=dict(
                         chunk_id=chunk_id, 
                         stream_id=stream_id, 
