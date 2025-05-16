@@ -11,9 +11,10 @@ pub fn withdraw_tips(ctx: Context<WithdrawTips>) -> Result<()> {
 
     require!(event.end_timestamp < current_time, CErrorCode::EventEnded);
     require!(event.authority == ctx.accounts.authority.key(), CErrorCode::InvalidOwner);
+    require!(event.realtime_asset == ctx.accounts.realtime_asset.key(), CErrorCode::EventNotFound);
 
-    let init_balance = event.get_lamports();
     // Transfer SOL to the event authority
+    let init_balance = event.get_lamports();
     event.sub_lamports(init_balance)?;
     ctx.accounts.authority.add_lamports(init_balance)?;
 

@@ -39,6 +39,10 @@ security_txt!{
 pub mod haus {
     use super::*;
 
+    pub fn load_chunks(ctx: Context<LoadChunks>, args: LoadChunksArgs) -> Result<()> {
+        instructions::load_chunks(ctx, args)
+    }
+
     pub fn init_tipping_calculator(ctx: Context<InitTippingCalculator>) -> Result<()> {
         instructions::init_tipping_calculator(ctx)
     }
@@ -64,16 +68,43 @@ pub mod haus {
     }
 }
 
-// <withdraw_tips>
+// <load_chunks>
 #[derive(Accounts)]
-pub struct WithdrawTips<'info> {
-    #[account(mut)]
-    pub realtime_asset: Account<'info, BaseAssetV1>,
+pub struct LoadChunks<'info> {
+    /// CHECK: in the instruction
+    pub realtime_asset: UncheckedAccount<'info>,
     #[account(
         mut,
         seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
         bump,
     )]
+    pub event: Account<'info, Event>,
+    /// CHECK: chunk_uploader
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    /// CHECK: by the mpl 
+    #[account(address = MPL_CORE_ID)]
+    pub mpl_core_program: UncheckedAccount<'info>
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize)]
+pub struct LoadChunksArgs {
+    pub uri: String,
+}
+// </load_chunks>
+
+// <withdraw_tips>
+#[derive(Accounts)]
+pub struct WithdrawTips<'info> {
+    // #[account(mut)]
+    /// CHECK: checked in the instruction
+    pub realtime_asset: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
+        bump,
+    )] 
     pub event: Account<'info, Event>,
     /// CHECK: authority
     #[account(mut)]
@@ -103,6 +134,8 @@ pub struct Event {
     pub ticket_collection: Pubkey,
     /// Event type (category)
     pub art_category: ArtCategory,
+    /// Chunk uploader
+    pub chunk_uploader: Pubkey,
 }
 
 #[derive(Accounts)]
@@ -200,7 +233,7 @@ pub struct InitTippingCalculator<'info> {
 #[derive(Accounts, Session)]
 #[instruction(ix: MakeTipArgs)]
 pub struct MakeTip<'info> {
-    // TODO: maybe pass realtime_asset_key via UncheckedAccount
+    // TODO: maybe pass realtime_asset_key via UncheckedAccount instead of args
     #[account(
         mut,
         seeds = [constants::EVENT_SEED, ix.realtime_asset_key.as_ref()],

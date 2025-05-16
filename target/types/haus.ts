@@ -218,6 +218,69 @@ export type Haus = {
       "args": []
     },
     {
+      "name": "loadChunks",
+      "discriminator": [
+        192,
+        132,
+        163,
+        62,
+        21,
+        1,
+        26,
+        59
+      ],
+      "accounts": [
+        {
+          "name": "realtimeAsset"
+        },
+        {
+          "name": "event",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  118,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "realtimeAsset"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "mplCoreProgram",
+          "address": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "loadChunksArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "makeTip",
       "discriminator": [
         163,
@@ -331,8 +394,7 @@ export type Haus = {
       ],
       "accounts": [
         {
-          "name": "realtimeAsset",
-          "writable": true
+          "name": "realtimeAsset"
         },
         {
           "name": "event",
@@ -427,37 +489,42 @@ export type Haus = {
     {
       "code": 6000,
       "name": "invalidOwner",
-      "msg": "Signer does not own the token account"
+      "msg": "Signer has no authority over the event"
     },
     {
       "code": 6001,
-      "name": "invalidMint",
-      "msg": "Token account does not match mint"
+      "name": "eventNotFound",
+      "msg": "Event not found"
     },
     {
       "code": 6002,
-      "name": "invalidAmount",
-      "msg": "Token account must hold exactly 1 token"
+      "name": "invalidEventCategory",
+      "msg": "Invalid event category."
     },
     {
       "code": 6003,
-      "name": "invalidMetadataAccount",
-      "msg": "Invalid metadata account"
+      "name": "eventNotStarted",
+      "msg": "The event has not started yet."
     },
     {
       "code": 6004,
-      "name": "unverifiedCollection",
-      "msg": "NFT collection is not verified"
+      "name": "eventEnded",
+      "msg": "The event has already ended."
     },
     {
       "code": 6005,
-      "name": "invalidCollection",
-      "msg": "NFT does not belong to the expected collection"
+      "name": "eventNotEnded",
+      "msg": "The event has not ended yet."
     },
     {
       "code": 6006,
-      "name": "noCollectionData",
-      "msg": "NFT has no collection data"
+      "name": "eventDurationInvalid",
+      "msg": "Invalid event duration. Should be either 15m, 30m or 45m"
+    },
+    {
+      "code": 6007,
+      "name": "noTicket",
+      "msg": "TGA (Ticket Gated Access)"
     }
   ],
   "types": [
@@ -639,6 +706,13 @@ export type Haus = {
                 "name": "artCategory"
               }
             }
+          },
+          {
+            "name": "chunkUploader",
+            "docs": [
+              "Chunk uploader"
+            ],
+            "type": "pubkey"
           }
         ]
       }
@@ -665,6 +739,18 @@ export type Haus = {
           },
           {
             "name": "collectionV1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "loadChunksArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "uri",
+            "type": "string"
           }
         ]
       }

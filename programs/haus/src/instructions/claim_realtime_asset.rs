@@ -22,8 +22,7 @@ pub fn claim_realtime_asset(ctx: Context<ClaimRealtimeAsset>) -> Result<()> {
 
     // TODO: remove this line, transfer to the recipient anyways (?)
     require!(recipient.key() == ctx.accounts.authority.key(), CErrorCode::InvalidOwner);
-
-    // TODO: event is the authority
+    // require!(recipient.key() == ctx.accounts.recipient.key(), CErrorCode::InvalidOwner);
 
     // Transfer the asset using Metaplex Core's transfer instruction
     TransferV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
