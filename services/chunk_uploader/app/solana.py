@@ -8,7 +8,6 @@ from solders.account import Account
 from solders.system_program import ID
 from solders.keypair import Keypair
 
-from solders.system_program import TransferParams, transfer
 from solana.rpc.commitment import Confirmed
 from solana.rpc.api import Client
 from solana.rpc.types import TxOpts
