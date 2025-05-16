@@ -15,7 +15,11 @@ pub fn load_chunks(ctx: Context<LoadChunks>, args: LoadChunksArgs) -> Result<()>
     require!(event.realtime_asset == ctx.accounts.realtime_asset.key(), CErrorCode::EventNotFound);
 
     UpdateV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
+        .asset(&ctx.accounts.realtime_asset.to_account_info())
+        .payer(&ctx.accounts.authority.to_account_info())
+        .authority(Some(ctx.accounts.event.to_account_info().as_ref()))
         .new_uri(args.uri)
+        .system_program(&ctx.accounts.system_program.to_account_info())
         .invoke_signed(&[&[
             constants::EVENT_SEED,
             ctx.accounts.realtime_asset.key().as_ref(),

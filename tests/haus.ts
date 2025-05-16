@@ -22,7 +22,7 @@ describe("haus", async () => {
   //   { name: 'token_metadata', programId: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'}
   // ], []);
   // const provider = new BankrunProvider(context);
-  
+
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
@@ -52,6 +52,7 @@ describe("haus", async () => {
       reservePrice: new BN(1),
       ticketCollection: payer.publicKey,
       artCategory: standupComedy_artCategory,
+      chunkUploader: payer.payer.publicKey,
     };
     let event_seeds = [
       Buffer.from(anchor.utils.bytes.utf8.encode("event")),
@@ -164,8 +165,32 @@ describe("haus", async () => {
     }
     const acc = await program.account.event.fetch(event_pubkey);
     console.log("total: " + acc.tippingLeaderTotal.toString());
-  
+
+    // await delay(10_000);
+
+    /// ::upload_chunks
+    try {
+      const tx = await program.methods
+        .loadChunks({
+          uri: "u.r.i",
+        })
+        .accountsPartial({
+          realtimeAsset: realtime_asset.publicKey,
+          event: event_pubkey,
+          authority: payer.payer.publicKey,
+        })
+        .signers([payer.payer])
+        .rpc();
+      console.log(tx);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+
+    console.log("chunks uploaded");
+
     await delay(10_000);
+
     /// ::claim_realtime_asset
     try {
       const tx = await program.methods
@@ -176,7 +201,7 @@ describe("haus", async () => {
           authority: payer.payer.publicKey,
         })
         .signers([payer.payer])
-        .rpc()
+        .rpc();
       console.log(tx);
     } catch (e) {
       console.log(e);
@@ -197,13 +222,11 @@ describe("haus", async () => {
         .signers([payer.payer])
         .rpc();
       console.log(tx);
-
     } catch (e) {
       console.log(e);
       throw e;
     }
 
+    console.log("tips withdrawn");
   });
-
-
 });

@@ -3,6 +3,7 @@ from solders.pubkey import Pubkey
 from solders.keypair import Keypair
 
 from solders.system_program import TransferParams, transfer
+from solders.account import Account
 
 from app.config import AppConfig
 

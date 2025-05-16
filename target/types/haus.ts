@@ -231,11 +231,11 @@ export type Haus = {
       ],
       "accounts": [
         {
-          "name": "realtimeAsset"
+          "name": "realtimeAsset",
+          "writable": true
         },
         {
           "name": "event",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -632,6 +632,10 @@ export type Haus = {
                 "name": "artCategory"
               }
             }
+          },
+          {
+            "name": "chunkUploader",
+            "type": "pubkey"
           }
         ]
       }

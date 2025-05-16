@@ -225,11 +225,11 @@
       ],
       "accounts": [
         {
-          "name": "realtime_asset"
+          "name": "realtime_asset",
+          "writable": true
         },
         {
           "name": "event",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -626,6 +626,10 @@
                 "name": "ArtCategory"
               }
             }
+          },
+          {
+            "name": "chunk_uploader",
+            "type": "pubkey"
           }
         ]
       }

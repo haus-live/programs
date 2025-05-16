@@ -71,10 +71,9 @@ pub mod haus {
 // <load_chunks>
 #[derive(Accounts)]
 pub struct LoadChunks<'info> {
-    /// CHECK: in the instruction
-    pub realtime_asset: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub realtime_asset: Account<'info, BaseAssetV1>,
     #[account(
-        mut,
         seeds = [constants::EVENT_SEED, realtime_asset.key().as_ref()],
         bump,
     )]
@@ -97,7 +96,6 @@ pub struct LoadChunksArgs {
 // <withdraw_tips>
 #[derive(Accounts)]
 pub struct WithdrawTips<'info> {
-    // #[account(mut)]
     /// CHECK: checked in the instruction
     pub realtime_asset: UncheckedAccount<'info>,
     #[account(
@@ -178,6 +176,7 @@ pub struct CreateEventArgs {
     reserve_price: u128,
     ticket_collection: Pubkey,
     art_category: ArtCategory,
+    chunk_uploader: Pubkey,
 }
 // </create_event>
 
