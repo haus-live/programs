@@ -34,7 +34,7 @@ describe("haus", async () => {
 
   console.log("current ts!" + current_timestamp.toString());
 
-  it("creates event & makes tip & session keys & rta claim", async () => {
+  it("tests all instruction at once (the happy path only) as I didn't have time to do proper describe/it structure", async () => {
     const currentSlot = await program.provider.connection.getSlot();
     const currentBlocktime = await program.provider.connection.getBlockTime(
       currentSlot
