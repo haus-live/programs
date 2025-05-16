@@ -55,26 +55,22 @@ class Task:
             self._logger.info(f'created a temporary directory {td}')
             chunk_file_name = f'file.mp4'
             chunk_file_path = os.path.join(td, chunk_file_name)
+            chunk_pinata_uri = None
             with open(chunk_file_path, 'wb') as file:
                 self._run_ffmpeg(stream_id=stream_id, file_name=file.name)
             with open(chunk_file_path, 'rb') as file:
-                chunk_uri = self._pinata.write_file(file)
-        # with tempfile.NamedTemporaryFile(suffix=f'{chunk_id}.{stream_id}.mp4', mode='wb') as tmp:
-        #     print(f"tmp file created {tmp.name}")
-        #     self._run_ffmpeg(stream_id=stream_id, file_name=tmp.name)
-        #     chunk_uri = self._pinata.write_file(tmp)
-            # asset_uri = self._solana.read_uri_from_asset_account(asset_pubkey)
-            # asset_content = self._pinata.read_json(asset_uri)
-            # self._patch_asset_content(content=asset_content, chunk=chunk_uri, chunk_id=chunk_id)
-            # new_asset_uri = self._pinata.write_json(asset_content)
-            # self._solana.update_core_asset_account_uri(asset_pubkey, new_asset_uri)
-        print("tmp file removed")
-    
+                chunk_pinata_uri = self._pinata.write_file(file)
+            asset_uri = self._solana.read_uri_from_asset_account(asset_pubkey)
+            asset_content = self._pinata.read_json(asset_uri)
+            self._patch_asset_content(content=asset_content, chunk=chunk_pinata_uri, chunk_id=chunk_id)
+            new_asset_uri = self._pinata.write_json(asset_content)
+            self._solana.update_core_asset_account_uri(asset_pubkey, new_asset_uri)
+
     def _process_chunk_noexcept(self, *, chunk_id, stream_id, asset_pubkey):
         try:
             self._process_chunk(chunk_id=chunk_id, stream_id=stream_id, asset_pubkey=asset_pubkey)
         except BaseException as e:
-            self._logger.error(e)
+            self._logger.error(repr(e))
 
     def process_stream(self, *, stream_id, asset_pubkey, event_begin_timestamp, event_end_timestamp):
         _ = list(map(
