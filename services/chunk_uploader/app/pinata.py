@@ -74,6 +74,6 @@ class Pinata:
         return response.json()
 
     def write_json(self, payload: dict) -> IpfsUri:
-        with tempfile.TemporaryFile() as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".pinata") as tmp:
             json.dump(payload)
             return self.write_file(tmp)
