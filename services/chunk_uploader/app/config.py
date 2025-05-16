@@ -16,3 +16,5 @@ class AppConfig(BaseSettings):
     CHUNK_DURATION: int = 60
 
     SCHEDULER_MAX_INSTANCES: int = 100
+
+    APP_PORT: int =8888
