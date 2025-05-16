@@ -45,7 +45,7 @@ class Task:
             asset_content = self._pinata.read_json(asset_uri)
             self._patch_asset_content(content=asset_content, chunk=chunk_uri, chunk_id=chunk_id)
             new_asset_uri = self._pinata.write_json(asset_content)
-            self._solana.update_cose_asset_account_uri(new_asset_uri)
+            self._solana.update_core_asset_account_uri(new_asset_uri)
 
     def process_stream(self, *, stream_id, asset_pubkey, event_begin_timestamp, event_end_timestamp):
         map(

@@ -8,7 +8,7 @@ from app.config import AppConfig
 from app.base import IpfsUri
 
 
-PINATA_PUBLIC_GATEWAY_FMT = 'https://gateway.pinata.cloud/ipfs/{CID}'
+_PINATA_PUBLIC_GATEWAY_FMT = 'https://gateway.pinata.cloud/ipfs/{CID}'
 
 
 class Pinata:
@@ -36,7 +36,7 @@ class Pinata:
         # https://docs.pinata.cloud/api-reference/endpoint/upload-a-file#response-data-cid
         cid = json_response['data']['cid']
         # https://docs.pinata.cloud/ipfs-101/what-are-cids
-        return PINATA_PUBLIC_GATEWAY_FMT.format(cid)
+        return _PINATA_PUBLIC_GATEWAY_FMT.format(cid)
 
     def read_json(self, uri: str) -> dict:
         response = requests.get(uri)
