@@ -1,5 +1,10 @@
 ## Prerequisites
 
+Create an `.env` file as in an `example.env` and pass it to the environment
+```bash
+source .env
+```
+
 Create virtual environment
 
 ```bash

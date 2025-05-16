@@ -23,7 +23,7 @@ class AppConfig(BaseSettings):
 
     RESTREAMER_HLS_BASE_URI: str
     # CHUNK_DURATION: int = 60
-    CHUNK_DURATION: int = 10
+    CHUNK_DURATION: int = 60
 
     SCHEDULER_MAX_INSTANCES: int = 100
 
