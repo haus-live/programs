@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/haus.json`.
  */
 export type Haus = {
-  "address": "8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5",
+  "address": "GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1",
   "metadata": {
     "name": "haus",
     "version": "0.1.0",

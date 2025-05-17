@@ -37,3 +37,21 @@ https://github.com/coral-xyz/sealevel-attacks
 # Build program and IDL (typescript client)
 
 https://www.anchor-lang.com/docs/clients/typescript
+
+## Verification
+
+```bash
+RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor build --verifiable
+```
+
+```bash
+RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor deploy --verifiable
+```
+
+```bash
+RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor idl init --provider.cluster devnet --filepath target/idl/haus.json GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1
+```
+
+```bash
+RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor verify --env RUSTUP_TOOLCHAIN=nightly-2025-04-01 -p haus GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1 --skip-build --provider.cluster devnet
+```
