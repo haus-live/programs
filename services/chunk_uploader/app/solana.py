@@ -20,7 +20,8 @@ from borsh_construct import U8, String, CStruct
 
 from app.config import AppConfig
 
-_LOAD_CHUNKS_INSTRUCTION_IDENTIFIER: bytes = sha256(b'global::load_chunks').digest()[:8]
+# _LOAD_CHUNKS_INSTRUCTION_IDENTIFIER: bytes = sha256(b'global::load_chunks').digest()[:8]
+_LOAD_CHUNKS_INSTRUCTION_IDENTIFIER: bytes = bytes([192, 132, 163, 62, 21, 1, 26, 59])
 _LOAD_CHUNKS_ARGS_CSTRUCT = CStruct(
     'uri' / String
 )

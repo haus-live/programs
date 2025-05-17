@@ -26,13 +26,15 @@ use solana_security_txt::security_txt;
 
 declare_id!("8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5");
 
+#[cfg(not(feature = "no-entrypoint"))]
 security_txt!{
     name: "Haus",
     project_url: "https://github.com/haus-live/programs",
     contacts: "email:hauslive25@gmail.com",
     preferred_languages: "en,it",
     source_code: "https://github.com/haus-live/programs",
-    auditors: "None"
+    auditors: "None",
+    policy: "https://github.com/haus-live/programs/blob/main/SECURITY.md"
 }
 
 #[program]
