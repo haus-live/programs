@@ -24,7 +24,7 @@ pub use errors::{
 };
 use solana_security_txt::security_txt;
 
-declare_id!("8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5");
+declare_id!("GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1");
 
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt!{

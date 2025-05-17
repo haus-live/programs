@@ -1,6 +1,6 @@
 # Deployments
 
-The program is currently deployed on devnet: https://explorer.solana.com/address/8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5?cluster=devnet
+The program is currently deployed on devnet: https://explorer.solana.com/address/GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1?cluster=devnet
 
 
 ## Building

@@ -5,22 +5,26 @@ anchor_version = "0.30.1"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-haus = "8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5"
-
 [programs.devnet]
-haus = "8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5"
+haus = "GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1"
 
-[provider]
-cluster = "Localnet"
-wallet = "~/.config/solana/id.json"
+[programs.localnet]
+haus = "GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1"
 
 [registry]
 url = "https://api.apr.dev"
 
+[provider]
+cluster = "Devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
 [test]
 startup_wait = 5000
 shutdown_wait = 2000
+upgradeable = false
 
 [test.validator]
 bind_address = "0.0.0.0"
@@ -28,17 +32,11 @@ url = "https://api.mainnet-beta.solana.com"
 ledger = ".anchor/test-ledger"
 rpc_port = 8899
 
-# metaplex token metadata
 [[test.validator.clone]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 
-# metaplex core asset
 [[test.validator.clone]]
 address = "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
 
-# magicblock session keys
 [[test.validator.clone]]
 address = "KeyspM2ssCJbqUhQ4k7sveSiY4WjnYsrXkC8oDbwde5"
-
-[scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

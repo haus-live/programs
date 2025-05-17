@@ -3,8 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Haus } from "../target/types/haus";
 import { Keypair } from "@solana/web3.js";
 import { BN } from "bn.js";
-import { expect } from "chai";
-import { SessionTokenManager, SDK as ST } from "@magicblock-labs/gum-sdk";
+import { SessionTokenManager } from "@magicblock-labs/gum-sdk";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -33,6 +32,11 @@ describe("haus", async () => {
   let current_timestamp = Date.now() / 1000;
 
   console.log("current ts!" + current_timestamp.toString());
+
+  xit("is a playground", async () => {
+    const b = Buffer.from('a', 'utf8')
+    console.log(b);
+  });
 
   it("tests all instruction at once (the happy path only) as I didn't have time to do proper describe/it structure", async () => {
     const currentSlot = await program.provider.connection.getSlot();

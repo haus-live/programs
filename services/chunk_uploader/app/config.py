@@ -16,7 +16,7 @@ class AppConfig(BaseSettings):
     PINATA_API_SECRET: Optional[str]
 
     SOLANA_RPC_URL: str = "https://api.devnet.solana.com"
-    HAUS_PROGRAM_ID: str = "8SjSBampBM2asLdQeJoAZpxJxpcbBEGG5q9ADRCAFxr5"
+    HAUS_PROGRAM_ID: str = "GZtbVznhmHTqn6PbiSN6PdJNPBboMW5gkCYszq9caNQ1"
     MPL_CORE_ASSET_PROGRAM_ID: str = "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
     CHUNK_UPDATER_PUBLIC_KEY: str
     CHUNK_UPDATER_SECRET_KEY: list[int]
